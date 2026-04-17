@@ -1,8 +1,5 @@
 # ScribeShield AI
 
-
-test
-
 ScribeShield AI is a healthcare speech-intelligence project for **high-risk phone call transcription**. It combines telephony-aware STT, uncertainty scoring, live medical-term verification, safe correction, and structured clinical extraction so a transcript is not just readable, but trustworthy enough to review.
 
 This repository contains the full stack:
