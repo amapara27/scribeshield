@@ -54,12 +54,12 @@ backend/stt/colab_dataset/
 # backend/test_audio/**/audio/**/*.flac
 # backend/test_audio/**/audio/**/*.ogg
 
+backend/audio_gen/output
 
-backend/audio_gen/output/run_5x_v1
-backend/audio_gen/outout/run_5x_v2
-
+# audio generation
 *.wav
 *.source
+*.csv
 
 backend/whisper_small_telephony_final
 backend/whisper_small_telephony_final/

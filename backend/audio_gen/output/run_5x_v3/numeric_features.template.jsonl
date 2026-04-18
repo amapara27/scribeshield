@@ -1,1 +1,0 @@
-{"record_type": "schema", "schema_version": "v1", "columns": ["clip_id", "word_index", "numeric_value_gt", "numeric_value_stt", "numeric_error", "numeric_type"]}

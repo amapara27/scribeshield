@@ -1,1 +1,0 @@
-{"record_type": "schema", "schema_version": "v1", "columns": ["clip_id", "word_index", "entity_type", "entity_gt", "entity_stt", "entity_verified"]}

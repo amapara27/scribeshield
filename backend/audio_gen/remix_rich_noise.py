@@ -1,4 +1,4 @@
-"""Create richer noisy variants (conversation + ambience + music) for run_5x_v2."""
+"""Create richer noisy variants (conversation + ambience + music)"""
 
 from __future__ import annotations
 

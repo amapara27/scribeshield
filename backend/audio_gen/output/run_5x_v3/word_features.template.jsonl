@@ -1,1 +1,0 @@
-{"record_type": "schema", "schema_version": "v1", "columns": ["clip_id", "word_index", "ground_truth", "stt_word", "is_error", "error_type", "start_ms", "end_ms", "duration_ms", "speaker", "context_prev", "context_next", "is_medical_term", "is_numeric", "closest_keyterm", "edit_distance", "phonetic_match", "difficulty_tags", "noise_level"]}
