@@ -129,11 +129,43 @@ class BenchmarkAggregate(BaseModel):
     keyterm_impact_pct: float
 
 
+class BenchmarkModelSummary(BaseModel):
+    id: str
+    label: str
+    clip_count: int
+    avg_wer: float
+    avg_cer: float | None = None
+    avg_digit_accuracy: float | None = None
+    avg_medical_keyword_accuracy: float | None = None
+
+
+class BenchmarkModelDelta(BaseModel):
+    wer_reduction: float
+    cer_reduction: float | None = None
+    digit_accuracy_gain: float | None = None
+    medical_keyword_accuracy_gain: float | None = None
+
+
+class BenchmarkModelPerClip(BaseModel):
+    clip_id: str
+    base_wer: float
+    fine_tuned_wer: float
+    wer_reduction: float
+
+
+class BenchmarkModelComparison(BaseModel):
+    base_model: BenchmarkModelSummary
+    fine_tuned_model: BenchmarkModelSummary
+    delta: BenchmarkModelDelta
+    per_clip: list[BenchmarkModelPerClip] = Field(default_factory=list)
+
+
 class BenchmarkResponse(BaseModel):
     results: list[BenchmarkClipResult]
     ablation: list[AblationRow]
     metrics: BenchmarkMetrics
     aggregate: BenchmarkAggregate
+    comparison: BenchmarkModelComparison | None = None
 
 
 class LearningLoopHistoryPoint(BaseModel):

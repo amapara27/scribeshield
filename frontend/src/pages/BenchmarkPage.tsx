@@ -50,6 +50,12 @@ const fmtPercent = (value: number | null | undefined, decimals = 1): string => {
   return `${pct.toFixed(decimals)}%`;
 };
 
+const fmtSignedPercent = (value: number | null | undefined, decimals = 1): string => {
+  const pct = toPercent(value);
+  if (pct === null) return "n/a";
+  return `${pct > 0 ? "+" : ""}${pct.toFixed(decimals)}%`;
+};
+
 const BenchmarkPage = () => {
   const [data, setData] = useState<BenchmarkResponse | null>(null);
   const [dataSource, setDataSource] = useState<"api" | "unavailable">("unavailable");
@@ -286,6 +292,38 @@ const BenchmarkPage = () => {
     return cards;
   }, [data]);
 
+  const comparisonRows = useMemo(() => {
+    const comparison = data?.comparison;
+    if (!comparison) return [];
+
+    return [
+      {
+        label: "Overall WER",
+        base: comparison.base_model.avg_wer,
+        fineTuned: comparison.fine_tuned_model.avg_wer,
+        delta: comparison.delta.wer_reduction,
+        deltaLabel: "WER reduction",
+        betterWhenPositive: true,
+      },
+      {
+        label: "Digit Accuracy",
+        base: comparison.base_model.avg_digit_accuracy,
+        fineTuned: comparison.fine_tuned_model.avg_digit_accuracy,
+        delta: comparison.delta.digit_accuracy_gain,
+        deltaLabel: "accuracy gain",
+        betterWhenPositive: true,
+      },
+      {
+        label: "Medical Keyword Accuracy",
+        base: comparison.base_model.avg_medical_keyword_accuracy,
+        fineTuned: comparison.fine_tuned_model.avg_medical_keyword_accuracy,
+        delta: comparison.delta.medical_keyword_accuracy_gain,
+        deltaLabel: "accuracy gain",
+        betterWhenPositive: true,
+      },
+    ];
+  }, [data]);
+
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) {
       setSortAsc((value) => !value);
@@ -318,6 +356,9 @@ const BenchmarkPage = () => {
               {fmtPercent(data.aggregate.avg_improvement_pct)} average correction lift.
               Verification rate {fmtPercent(data.metrics.verification_rate)}, unsafe
               guess rate {fmtPercent(data.metrics.unsafe_guess_rate)}.
+              {data.comparison
+                ? ` Fine-tuned telephony trims WER by ${fmtPercent(data.comparison.delta.wer_reduction)} versus base whisper-small.`
+                : ""}
             </p>
           ) : (
             <p className="text-sm text-muted-foreground mt-2">
@@ -349,6 +390,76 @@ const BenchmarkPage = () => {
 
         {data && (
           <>
+        <FadeInSection>
+          <div className="mb-12">
+            <div className="flex items-end justify-between gap-4 mb-4">
+              <div>
+                <h2 className="text-2xl font-bold">Model Comparison</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Side-by-side benchmark averages for `openai/whisper-small` versus the local `fine_tuned_telephony` model.
+                </p>
+              </div>
+              {data.comparison && (
+                <div className="rounded-lg border border-success/30 bg-success/10 px-4 py-3 text-right">
+                  <div className="text-xs uppercase tracking-[0.2em] text-success">Model Comparison</div>
+                  <div className="text-lg font-semibold text-foreground">
+                    {fmtPercent(data.comparison.delta.wer_reduction)} WER reduction
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {data.comparison ? (
+              <div className="overflow-x-auto rounded-lg border shadow-card">
+                <table className="w-full text-sm">
+                  <thead className="bg-primary text-primary-foreground">
+                    <tr>
+                      <th className="px-4 py-3 text-left">Metric</th>
+                      <th className="px-4 py-3 text-left">
+                        {data.comparison.base_model.label}
+                      </th>
+                      <th className="px-4 py-3 text-left">
+                        {data.comparison.fine_tuned_model.label}
+                      </th>
+                      <th className="px-4 py-3 text-left">Delta</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {comparisonRows.map((row, index) => (
+                      <tr
+                        key={row.label}
+                        className={`border-t ${index % 2 === 0 ? "" : "bg-secondary/50"}`}
+                      >
+                        <td className="px-4 py-3 font-medium text-foreground">{row.label}</td>
+                        <td className="px-4 py-3">{fmtPercent(row.base)}</td>
+                        <td className="px-4 py-3">{fmtPercent(row.fineTuned)}</td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={
+                              (row.delta ?? 0) >= 0
+                                ? "text-success font-semibold"
+                                : "text-signal-red font-semibold"
+                            }
+                          >
+                            {fmtSignedPercent(row.delta)} {row.deltaLabel}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-warning">
+                Model comparison data has not been generated yet. Re-run
+                `backend/scripts/run_benchmark.py --run-pipeline` after the base
+                `openai/whisper-small` and local `fine_tuned_telephony` model assets
+                are available.
+              </div>
+            )}
+          </div>
+        </FadeInSection>
+
         <FadeInSection>
           <h2 className="text-2xl font-bold mb-6">Ablation Study</h2>
           <div className="overflow-x-auto rounded-lg border shadow-card mb-12">
@@ -697,6 +808,7 @@ const BenchmarkPage = () => {
               {[
                 "ElevenLabs TTS renders healthcare call scripts with diverse voices and accents.",
                 "ffmpeg degrades audio to simulated 8kHz telephony conditions.",
+                "Base Whisper Small and fine_tuned_telephony run side by side on the same benchmark clips.",
                 "Scribe v2 transcribes each clip with dynamic keyterm prompting.",
                 "WER/CER are computed against benchmark ground truth.",
                 "Multi-signal uncertainty detection scores each token.",

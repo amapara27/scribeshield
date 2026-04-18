@@ -32,10 +32,12 @@ DEFAULT_RESULTS_EXAMPLE_PATH = BACKEND_DIR / "data" / "benchmark_results.json.ex
 DEFAULT_EVAL_PATH = BACKEND_DIR / "data" / "benchmark_eval.jsonl"
 DEFAULT_MANIFEST_PATH = BACKEND_DIR / "test_audio" / "benchmark" / "v1" / "manifest.csv"
 DEFAULT_GENERATED_TELEPHONY_DIR = BACKEND_DIR / "audio_gen" / "output" / "run_5x_v2" / "telephony"
+DEFAULT_BASE_WHISPER_MODEL_ID = "openai/whisper-small"
 
 _WORD_RE = re.compile(r"[a-z0-9]+(?:'[a-z0-9]+)?")
 _DIGIT_RE = re.compile(r"\d")
 _SOURCE_CLIP_RE = re.compile(r"\((clip_[0-9]{4}_[a-z0-9_]+)\)")
+_WHISPER_PIPELINE_CACHE: dict[str, Any] = {}
 
 
 def _parse_args() -> argparse.Namespace:
@@ -71,6 +73,11 @@ def _parse_args() -> argparse.Namespace:
             "Generate eval rows by running the live preprocessing/scribe/verification/"
             "correction pipeline over benchmark audio before recomputing metrics"
         ),
+    )
+    parser.add_argument(
+        "--base-whisper-model",
+        default=DEFAULT_BASE_WHISPER_MODEL_ID,
+        help="Transformers model id/path for the unfine-tuned Whisper baseline",
     )
     return parser.parse_args()
 
@@ -375,6 +382,36 @@ def _scaled_optional(value: float | None, scale: float) -> float | None:
     return _round(value * scale)
 
 
+def _compute_text_metrics(
+    *,
+    reference_text: str,
+    hypothesis_text: str,
+    medical_terms: list[list[str]],
+    explicit_keywords: list[list[str]],
+    wer_scale: float,
+    rate_scale: float,
+) -> dict[str, float | None]:
+    word_error = _error_rate_ratio(_tokens(reference_text), _tokens(hypothesis_text))
+    char_error = _error_rate_ratio(
+        list("".join(_tokens(reference_text))),
+        list("".join(_tokens(hypothesis_text))),
+    )
+    digit_acc = _accuracy_ratio(_digits(reference_text), _digits(hypothesis_text))
+    medical_acc = _medical_keyword_accuracy_ratio(
+        reference_text,
+        hypothesis_text,
+        medical_terms,
+        explicit_keywords,
+    )
+    return {
+        "wer": _round(word_error * wer_scale),
+        "cer": _round(char_error * wer_scale),
+        "digit_accuracy": _scaled_optional(digit_acc, rate_scale),
+        "medical_keyword_accuracy": _scaled_optional(medical_acc, rate_scale),
+        "word_error_ratio": word_error,
+    }
+
+
 def _compute_result_row(
     row: dict[str, Any],
     source_rows_by_clip: dict[str, dict[str, Any]],
@@ -403,35 +440,29 @@ def _compute_result_row(
     if not reference_text:
         raise ValueError(f"eval row {clip_id} missing ground_truth/reference_text/text")
 
-    raw_word_error = _error_rate_ratio(_tokens(reference_text), _tokens(raw_text))
-    corrected_word_error = _error_rate_ratio(_tokens(reference_text), _tokens(corrected_text))
-
-    raw_char_error = _error_rate_ratio(list("".join(_tokens(reference_text))), list("".join(_tokens(raw_text))))
-    corrected_char_error = _error_rate_ratio(
-        list("".join(_tokens(reference_text))),
-        list("".join(_tokens(corrected_text))),
-    )
-
-    raw_digit_acc = _accuracy_ratio(_digits(reference_text), _digits(raw_text))
-    corrected_digit_acc = _accuracy_ratio(_digits(reference_text), _digits(corrected_text))
-
     explicit_keywords = _parse_medical_keywords(
         row.get("medical_keywords") or manifest.get("medical_keywords")
     )
-    raw_medical_acc = _medical_keyword_accuracy_ratio(
-        reference_text,
-        raw_text,
-        medical_terms,
-        explicit_keywords,
+    raw_metrics = _compute_text_metrics(
+        reference_text=reference_text,
+        hypothesis_text=raw_text,
+        medical_terms=medical_terms,
+        explicit_keywords=explicit_keywords,
+        wer_scale=wer_scale,
+        rate_scale=rate_scale,
     )
-    corrected_medical_acc = _medical_keyword_accuracy_ratio(
-        reference_text,
-        corrected_text,
-        medical_terms,
-        explicit_keywords,
+    corrected_metrics = _compute_text_metrics(
+        reference_text=reference_text,
+        hypothesis_text=corrected_text,
+        medical_terms=medical_terms,
+        explicit_keywords=explicit_keywords,
+        wer_scale=wer_scale,
+        rate_scale=rate_scale,
     )
 
     improvement_pct = 0.0
+    raw_word_error = float(raw_metrics["word_error_ratio"] or 0.0)
+    corrected_word_error = float(corrected_metrics["word_error_ratio"] or 0.0)
     if raw_word_error > 0:
         improvement_pct = max(0.0, ((raw_word_error - corrected_word_error) / raw_word_error) * 100.0)
 
@@ -452,14 +483,14 @@ def _compute_result_row(
             or "Unknown"
         ),
         "difficulty": difficulty,
-        "raw_wer": _round(raw_word_error * wer_scale),
-        "corrected_wer": _round(corrected_word_error * wer_scale),
-        "raw_cer": _round(raw_char_error * wer_scale),
-        "corrected_cer": _round(corrected_char_error * wer_scale),
-        "raw_digit_accuracy": _scaled_optional(raw_digit_acc, rate_scale),
-        "corrected_digit_accuracy": _scaled_optional(corrected_digit_acc, rate_scale),
-        "raw_medical_keyword_accuracy": _scaled_optional(raw_medical_acc, rate_scale),
-        "corrected_medical_keyword_accuracy": _scaled_optional(corrected_medical_acc, rate_scale),
+        "raw_wer": raw_metrics["wer"],
+        "corrected_wer": corrected_metrics["wer"],
+        "raw_cer": raw_metrics["cer"],
+        "corrected_cer": corrected_metrics["cer"],
+        "raw_digit_accuracy": raw_metrics["digit_accuracy"],
+        "corrected_digit_accuracy": corrected_metrics["digit_accuracy"],
+        "raw_medical_keyword_accuracy": raw_metrics["medical_keyword_accuracy"],
+        "corrected_medical_keyword_accuracy": corrected_metrics["medical_keyword_accuracy"],
         "improvement_pct": _round(improvement_pct),
     }
 
@@ -488,6 +519,7 @@ def _add_optional_fields(payload: dict[str, Any]) -> dict[str, Any]:
         metrics.setdefault("digit_accuracy_coverage", None)
         metrics.setdefault("medical_keyword_accuracy_coverage", None)
 
+    payload.setdefault("comparison", None)
     return payload
 
 
@@ -547,6 +579,7 @@ def _recompute(
     wer_scale, rate_scale = _scale_from_source(payload)
     medical_terms = _load_medical_terms()
 
+    parsed_eval_rows: list[dict[str, Any]] = []
     computed_results: list[dict[str, Any]] = []
     for idx, line in enumerate(lines, start=1):
         try:
@@ -555,6 +588,7 @@ def _recompute(
             raise SystemExit(f"Malformed eval JSONL at line {idx}: {exc}") from exc
         if not isinstance(row, dict):
             raise SystemExit(f"Malformed eval JSONL at line {idx}: expected object")
+        parsed_eval_rows.append(row)
         try:
             computed_results.append(
                 _compute_result_row(
@@ -611,7 +645,185 @@ def _recompute(
 
     payload["results"] = computed_results
     payload["aggregate"] = aggregate
+    payload["comparison"] = _compute_model_comparison(
+        eval_rows=parsed_eval_rows,
+        manifest_rows_by_clip=manifest_rows_by_clip,
+        medical_terms=medical_terms,
+        wer_scale=wer_scale,
+        rate_scale=rate_scale,
+    )
     return payload
+
+
+def _model_summary_from_eval_rows(
+    *,
+    eval_rows: Sequence[dict[str, Any]],
+    manifest_rows_by_clip: dict[str, dict[str, str]],
+    medical_terms: list[list[str]],
+    hypothesis_field: str,
+    wer_scale: float,
+    rate_scale: float,
+) -> dict[str, Any] | None:
+    per_clip: list[dict[str, Any]] = []
+    for row in eval_rows:
+        clip_id = str(row.get("clip_id") or "").strip()
+        hypothesis_text = _coerce_text(row.get(hypothesis_field))
+        if not clip_id or not hypothesis_text:
+            continue
+        manifest = manifest_rows_by_clip.get(clip_id, {})
+        reference_text = _coerce_text(
+            row.get("ground_truth")
+            or row.get("reference_text")
+            or row.get("text")
+            or manifest.get("ground_truth")
+        )
+        if not reference_text:
+            continue
+        explicit_keywords = _parse_medical_keywords(
+            row.get("medical_keywords") or manifest.get("medical_keywords")
+        )
+        metrics = _compute_text_metrics(
+            reference_text=reference_text,
+            hypothesis_text=hypothesis_text,
+            medical_terms=medical_terms,
+            explicit_keywords=explicit_keywords,
+            wer_scale=wer_scale,
+            rate_scale=rate_scale,
+        )
+        per_clip.append(
+            {
+                "clip_id": clip_id,
+                "wer": metrics["wer"],
+                "cer": metrics["cer"],
+                "digit_accuracy": metrics["digit_accuracy"],
+                "medical_keyword_accuracy": metrics["medical_keyword_accuracy"],
+            }
+        )
+
+    if not per_clip:
+        return None
+
+    return {
+        "clip_count": len(per_clip),
+        "avg_wer": _mean([float(row["wer"]) for row in per_clip if row["wer"] is not None]),
+        "avg_cer": _mean([float(row["cer"]) for row in per_clip if row["cer"] is not None]),
+        "avg_digit_accuracy": _mean_optional(
+            [row["digit_accuracy"] for row in per_clip]
+        ),
+        "avg_medical_keyword_accuracy": _mean_optional(
+            [row["medical_keyword_accuracy"] for row in per_clip]
+        ),
+        "results": per_clip,
+    }
+
+
+def _compute_model_comparison(
+    *,
+    eval_rows: Sequence[dict[str, Any]],
+    manifest_rows_by_clip: dict[str, dict[str, str]],
+    medical_terms: list[list[str]],
+    wer_scale: float,
+    rate_scale: float,
+) -> dict[str, Any] | None:
+    base_model_id = next(
+        (
+            str(row.get("base_whisper_model_id") or "").strip()
+            for row in eval_rows
+            if isinstance(row, dict) and str(row.get("base_whisper_model_id") or "").strip()
+        ),
+        DEFAULT_BASE_WHISPER_MODEL_ID,
+    )
+    fine_tuned_model_id = next(
+        (
+            str(row.get("fine_tuned_model_id") or "").strip()
+            for row in eval_rows
+            if isinstance(row, dict) and str(row.get("fine_tuned_model_id") or "").strip()
+        ),
+        "fine_tuned_telephony",
+    )
+
+    base_model = _model_summary_from_eval_rows(
+        eval_rows=eval_rows,
+        manifest_rows_by_clip=manifest_rows_by_clip,
+        medical_terms=medical_terms,
+        hypothesis_field="base_whisper_small_text",
+        wer_scale=wer_scale,
+        rate_scale=rate_scale,
+    )
+    fine_tuned_model = _model_summary_from_eval_rows(
+        eval_rows=eval_rows,
+        manifest_rows_by_clip=manifest_rows_by_clip,
+        medical_terms=medical_terms,
+        hypothesis_field="fine_tuned_telephony_text",
+        wer_scale=wer_scale,
+        rate_scale=rate_scale,
+    )
+    if not base_model or not fine_tuned_model:
+        return None
+
+    clip_lookup = {
+        row["clip_id"]: row
+        for row in base_model["results"]
+        if isinstance(row, dict) and row.get("clip_id")
+    }
+    per_clip: list[dict[str, Any]] = []
+    for fine_row in fine_tuned_model["results"]:
+        if not isinstance(fine_row, dict):
+            continue
+        clip_id = str(fine_row.get("clip_id") or "").strip()
+        if not clip_id:
+            continue
+        base_row = clip_lookup.get(clip_id)
+        if not base_row:
+            continue
+        per_clip.append(
+            {
+                "clip_id": clip_id,
+                "base_wer": base_row.get("wer"),
+                "fine_tuned_wer": fine_row.get("wer"),
+                "wer_reduction": _round(
+                    float(base_row.get("wer") or 0.0) - float(fine_row.get("wer") or 0.0)
+                ),
+            }
+        )
+
+    return {
+        "base_model": {
+            "id": base_model_id,
+            "label": "Base Whisper Small",
+            "clip_count": base_model["clip_count"],
+            "avg_wer": base_model["avg_wer"],
+            "avg_cer": base_model["avg_cer"],
+            "avg_digit_accuracy": base_model["avg_digit_accuracy"],
+            "avg_medical_keyword_accuracy": base_model["avg_medical_keyword_accuracy"],
+        },
+        "fine_tuned_model": {
+            "id": fine_tuned_model_id,
+            "label": "Fine-Tuned Telephony",
+            "clip_count": fine_tuned_model["clip_count"],
+            "avg_wer": fine_tuned_model["avg_wer"],
+            "avg_cer": fine_tuned_model["avg_cer"],
+            "avg_digit_accuracy": fine_tuned_model["avg_digit_accuracy"],
+            "avg_medical_keyword_accuracy": fine_tuned_model["avg_medical_keyword_accuracy"],
+        },
+        "delta": {
+            "wer_reduction": _round(
+                float(base_model["avg_wer"]) - float(fine_tuned_model["avg_wer"])
+            ),
+            "cer_reduction": _round(
+                float(base_model["avg_cer"]) - float(fine_tuned_model["avg_cer"])
+            ),
+            "digit_accuracy_gain": _round(
+                float(fine_tuned_model["avg_digit_accuracy"] or 0.0)
+                - float(base_model["avg_digit_accuracy"] or 0.0)
+            ),
+            "medical_keyword_accuracy_gain": _round(
+                float(fine_tuned_model["avg_medical_keyword_accuracy"] or 0.0)
+                - float(base_model["avg_medical_keyword_accuracy"] or 0.0)
+            ),
+        },
+        "per_clip": per_clip,
+    }
 
 
 def _join_text(parts: Sequence[str]) -> str:
@@ -688,12 +900,81 @@ def _build_ablation_rows(
     return rows, _round(keyterm_impact_pct)
 
 
+def _load_whisper_pipeline(model_ref: str) -> Any:
+    cached = _WHISPER_PIPELINE_CACHE.get(model_ref)
+    if cached is not None:
+        return cached
+
+    try:
+        from transformers import pipeline  # type: ignore[import-not-found]
+    except Exception as exc:  # noqa: BLE001
+        raise RuntimeError(
+            "Benchmark comparison needs torch and transformers installed."
+        ) from exc
+
+    pipe = pipeline(
+        task="automatic-speech-recognition",
+        model=model_ref,
+        tokenizer=model_ref,
+        feature_extractor=model_ref,
+        device=-1,
+        model_kwargs={"low_cpu_mem_usage": True},
+    )
+    _WHISPER_PIPELINE_CACHE[model_ref] = pipe
+    return pipe
+
+
+def _default_transcribe_kwargs() -> dict[str, Any]:
+    return {
+        "language": "en",
+        "task": "transcribe",
+    }
+
+
+async def _transcribe_with_whisper_model(model_ref: str, wav_path: Path) -> str:
+    pipe = _load_whisper_pipeline(model_ref)
+    payload = await asyncio.to_thread(
+        pipe,
+        str(wav_path),
+        return_timestamps="word",
+        generate_kwargs=_default_transcribe_kwargs(),
+    )
+    if not isinstance(payload, dict):
+        raise RuntimeError(f"Unexpected ASR output while transcribing {wav_path.name}")
+    return _coerce_text(payload.get("text"))
+
+
+async def _maybe_add_model_comparison_transcripts(
+    eval_row: dict[str, Any],
+    *,
+    audio_path: Path,
+    fine_tuned_model_path: Path | None,
+    base_model_id: str,
+) -> None:
+    if fine_tuned_model_path is None:
+        return
+
+    try:
+        eval_row["base_whisper_small_text"] = await _transcribe_with_whisper_model(
+            base_model_id,
+            audio_path,
+        )
+        eval_row["fine_tuned_telephony_text"] = await _transcribe_with_whisper_model(
+            str(fine_tuned_model_path),
+            audio_path,
+        )
+    except Exception as exc:  # noqa: BLE001
+        # Keep benchmark generation working even if comparison models are unavailable locally.
+        eval_row["model_comparison_error"] = str(exc)
+
+
 async def _generate_eval_rows_via_pipeline(
     manifest_rows_by_clip: dict[str, dict[str, str]],
     *,
     manifest_path: Path,
     wer_scale: float,
     rate_scale: float,
+    base_whisper_model_id: str,
 ) -> tuple[list[dict[str, Any]], dict[str, float], list[dict[str, Any]], float]:
     _ensure_backend_imports()
 
@@ -701,10 +982,13 @@ async def _generate_eval_rows_via_pipeline(
     from app.claude_correct import reset_corrector  # type: ignore
     from app.storage import store  # type: ignore
     from app.tavily_verify import reset_verifier  # type: ignore
+    from stt.runtime import resolve_local_model_location  # type: ignore
 
     store.reset()
     reset_verifier()
     reset_corrector()
+    fine_tuned_validation = resolve_local_model_location().validation
+    fine_tuned_model_path = fine_tuned_validation.path if fine_tuned_validation.ready else None
 
     eval_rows: list[dict[str, Any]] = []
     verified_changes = 0
@@ -737,20 +1021,27 @@ async def _generate_eval_rows_via_pipeline(
         keyterm_raw_text = _join_text([word.text for word in keyterm_result.words])
         corrected_text = _join_text([word.word for word in final_result.corrected_transcript])
 
-        eval_rows.append(
-            {
-                "clip_id": clip_id,
-                "category": str(manifest_row.get("category") or "Unknown"),
-                "difficulty": str(manifest_row.get("difficulty") or "Standard"),
-                "ground_truth": reference_text,
-                "raw_text": keyterm_raw_text,
-                "corrected_text": corrected_text,
-                "baseline_raw_text": baseline_raw_text,
-                "preprocessed_raw_text": preprocessed_raw_text,
-                "keyterm_raw_text": keyterm_raw_text,
-                "medical_keywords": str(manifest_row.get("medical_keywords") or ""),
-            }
+        eval_row = {
+            "clip_id": clip_id,
+            "category": str(manifest_row.get("category") or "Unknown"),
+            "difficulty": str(manifest_row.get("difficulty") or "Standard"),
+            "ground_truth": reference_text,
+            "raw_text": keyterm_raw_text,
+            "corrected_text": corrected_text,
+            "baseline_raw_text": baseline_raw_text,
+            "preprocessed_raw_text": preprocessed_raw_text,
+            "keyterm_raw_text": keyterm_raw_text,
+            "medical_keywords": str(manifest_row.get("medical_keywords") or ""),
+            "base_whisper_model_id": base_whisper_model_id,
+            "fine_tuned_model_id": "fine_tuned_telephony",
+        }
+        await _maybe_add_model_comparison_transcripts(
+            eval_row,
+            audio_path=audio_path,
+            fine_tuned_model_path=fine_tuned_model_path,
+            base_model_id=base_whisper_model_id,
         )
+        eval_rows.append(eval_row)
 
         raw_tokens = _tokens(keyterm_raw_text)
         reference_tokens = _tokens(reference_text)
@@ -823,6 +1114,7 @@ def main() -> int:
                 manifest_path=args.manifest,
                 wer_scale=wer_scale,
                 rate_scale=rate_scale,
+                base_whisper_model_id=args.base_whisper_model,
             )
         )
         args.eval.parent.mkdir(parents=True, exist_ok=True)

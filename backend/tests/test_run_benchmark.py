@@ -99,6 +99,35 @@ def test_recompute_metrics_from_eval_rows(tmp_path):
     assert agg["avg_corrected_medical_keyword_accuracy"] is not None
 
 
+def test_recompute_builds_model_comparison_when_eval_rows_include_both_models(tmp_path):
+    mod = _load_run_benchmark_module()
+    payload = _baseline_payload()
+
+    eval_row = {
+        "clip_id": "clip_a",
+        "category": "Medication Refill",
+        "difficulty": "Standard",
+        "ground_truth": "take metformin 50 mg daily",
+        "raw_text": "take metfornin 15 mg daily",
+        "corrected_text": "take metformin 50 mg daily",
+        "base_whisper_small_text": "take metfornin 15 mg daily",
+        "fine_tuned_telephony_text": "take metformin 50 mg daily",
+        "medical_keywords": ["metformin"],
+    }
+
+    eval_path = tmp_path / "benchmark_eval.jsonl"
+    eval_path.write_text(json.dumps(eval_row) + "\n", encoding="utf-8")
+
+    out = mod._recompute(payload=payload, eval_path=eval_path)
+
+    comparison = out["comparison"]
+    assert comparison is not None
+    assert comparison["base_model"]["avg_wer"] > comparison["fine_tuned_model"]["avg_wer"]
+    assert comparison["delta"]["wer_reduction"] > 0
+    assert comparison["delta"]["digit_accuracy_gain"] > 0
+    assert comparison["delta"]["medical_keyword_accuracy_gain"] > 0
+
+
 def test_resolve_benchmark_audio_path_prefers_manifest_audio(tmp_path):
     mod = _load_run_benchmark_module()
     manifest_path = tmp_path / "manifest.csv"

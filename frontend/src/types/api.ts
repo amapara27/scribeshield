@@ -110,11 +110,43 @@ export interface BenchmarkAggregate {
   keyterm_impact_pct: number;
 }
 
+export interface BenchmarkModelSummary {
+  id: string;
+  label: string;
+  clip_count: number;
+  avg_wer: number;
+  avg_cer?: number | null;
+  avg_digit_accuracy?: number | null;
+  avg_medical_keyword_accuracy?: number | null;
+}
+
+export interface BenchmarkModelDelta {
+  wer_reduction: number;
+  cer_reduction?: number | null;
+  digit_accuracy_gain?: number | null;
+  medical_keyword_accuracy_gain?: number | null;
+}
+
+export interface BenchmarkModelPerClip {
+  clip_id: string;
+  base_wer: number;
+  fine_tuned_wer: number;
+  wer_reduction: number;
+}
+
+export interface BenchmarkModelComparison {
+  base_model: BenchmarkModelSummary;
+  fine_tuned_model: BenchmarkModelSummary;
+  delta: BenchmarkModelDelta;
+  per_clip: BenchmarkModelPerClip[];
+}
+
 export interface BenchmarkResponse {
   results: BenchmarkClipResult[];
   ablation: AblationRow[];
   metrics: BenchmarkMetrics;
   aggregate: BenchmarkAggregate;
+  comparison?: BenchmarkModelComparison | null;
 }
 
 export interface LearningLoopHistoryPoint {
