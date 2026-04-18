@@ -61,7 +61,4 @@ backend/audio_gen/output
 *.source
 *.csv
 
-backend/whisper_small_telephony_final
-backend/whisper_small_telephony_final/
-backend/whisper\ small\ telephony\ final
-backend/whisper\ small\ telephony\ final/
+backend/tuned_models
