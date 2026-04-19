@@ -20,7 +20,8 @@ from .config import settings
 async def preprocess(input_path: str, *, stt_provider: str | None = None) -> str:
     """Run loudnorm → afftdn → 16kHz mono PCM WAV. Return path to cleaned WAV.
 
-    For full_ft, uses telephony_mode=True: skips denoising and applies
+    For local Whisper models (full_ft / lora / emergency_lora), uses
+    telephony_mode=True: skips denoising and applies
     8kHz→16kHz resampling to match the model's training distribution.
 
     Implementation notes:
@@ -43,6 +44,6 @@ async def preprocess(input_path: str, *, stt_provider: str | None = None) -> str
         timeout_s=120,
         ffmpeg_bin=ff,
         ffprobe_bin=fp,
-        telephony_mode=(stt_provider == "full_ft"),
+        telephony_mode=(stt_provider in {"full_ft", "lora", "emergency_lora"}),
     )
     return str(result.output_path)

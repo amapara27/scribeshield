@@ -1,7 +1,11 @@
 // Types matching the FastAPI backend contract
 
 export type ConfidenceLevel = "LOW" | "MEDIUM" | "HIGH";
-export type SttModelOption = "fine_tuned_telephony" | "scribe_v2";
+export type SttModelOption =
+  | "fine_tuned_telephony"
+  | "lora"
+  | "emergency_lora"
+  | "scribe_v2";
 
 export interface RawWord {
   word: string;

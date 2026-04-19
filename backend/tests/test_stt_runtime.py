@@ -63,6 +63,9 @@ def test_pipeline_words_to_scribe_words_falls_back_to_synthetic_timing() -> None
 def test_get_batch_provider_auto_falls_back_to_scribe(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setattr(runtime.settings, "STT_PROVIDER", "auto")
     monkeypatch.setattr(runtime.settings, "FINE_TUNED_STT_MODEL_PATH", tmp_path / "missing")
+    monkeypatch.setattr(runtime, "DEFAULT_MODEL_PATH", (tmp_path / "missing_full").resolve())
+    monkeypatch.setattr(runtime, "LEGACY_MODEL_PATH", (tmp_path / "missing_lora").resolve())
+    monkeypatch.setattr(runtime, "OLD_DROPIN_MODEL_PATH", (tmp_path / "missing_dropin").resolve())
     runtime.reset_runtime_cache()
 
     provider = runtime.get_batch_provider()
@@ -75,6 +78,8 @@ def test_get_batch_provider_explicit_local_raises_when_missing(
 ) -> None:
     monkeypatch.setattr(runtime.settings, "STT_PROVIDER", "full_ft")
     monkeypatch.setattr(runtime.settings, "FINE_TUNED_STT_MODEL_PATH", tmp_path / "missing")
+    monkeypatch.setattr(runtime, "DEFAULT_MODEL_PATH", (tmp_path / "missing_full").resolve())
+    monkeypatch.setattr(runtime, "OLD_DROPIN_MODEL_PATH", (tmp_path / "missing_dropin").resolve())
     runtime.reset_runtime_cache()
 
     with pytest.raises(RuntimeError, match="Fine-tuned STT model invalid"):
@@ -87,6 +92,56 @@ def test_get_batch_provider_honors_scribe_override(monkeypatch: pytest.MonkeyPat
     provider = runtime.get_batch_provider("scribe_v2")
 
     assert provider.name == "scribe_v2"
+
+
+def test_get_batch_provider_honors_lora_override(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    lora = (tmp_path / "whisper_small_LoRA_normal").resolve()
+    for name in (
+        "adapter_config.json",
+        "adapter_model.safetensors",
+        "preprocessor_config.json",
+        "tokenizer_config.json",
+        "tokenizer.json",
+    ):
+        _touch(lora / name)
+
+    monkeypatch.setattr(runtime.settings, "STT_PROVIDER", "auto")
+    monkeypatch.setattr(runtime, "LEGACY_MODEL_PATH", lora)
+    runtime.reset_runtime_cache()
+
+    provider = runtime.get_batch_provider("lora")
+
+    assert provider.name == "lora"
+    assert isinstance(provider, runtime.FineTunedTelephonyBatchProvider)
+    assert provider._model_path == lora
+
+
+def test_get_batch_provider_honors_emergency_override(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    emergency = (tmp_path / "whisper_tiny_LoRA_emergency").resolve()
+    for name in (
+        "adapter_config.json",
+        "adapter_model.safetensors",
+        "preprocessor_config.json",
+        "tokenizer_config.json",
+        "tokenizer.json",
+    ):
+        _touch(emergency / name)
+
+    monkeypatch.setattr(runtime.settings, "STT_PROVIDER", "auto")
+    monkeypatch.setattr(runtime, "EMERGENCY_MODEL_PATH", emergency)
+    runtime.reset_runtime_cache()
+
+    provider = runtime.get_batch_provider("emergency_lora")
+
+    assert provider.name == "emergency_lora"
+    assert isinstance(provider, runtime.FineTunedTelephonyBatchProvider)
+    assert provider._model_path == emergency
+
+
+def test_normalize_provider_aliases() -> None:
+    assert runtime._normalize_provider_name("fine_tuned_telephony") == "full_ft"
+    assert runtime._normalize_provider_name("whisper_small_LoRA_normal") == "lora"
+    assert runtime._normalize_provider_name("whisper_tiny_LoRA_emergency") == "emergency_lora"
 
 
 def test_pipeline_device_auto_prefers_mps(monkeypatch: pytest.MonkeyPatch) -> None:

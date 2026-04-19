@@ -6,7 +6,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { transcribeAudio } from "@/services/api";
-import type { TranscribeResponse, ProcessingStage, RawWord, CorrectedWord, SttModelOption } from "@/types/api";
+import type { TranscribeResponse, ProcessingStage, RawWord, CorrectedWord } from "@/types/api";
 
 type DemoVariant = {
   id: string;
@@ -191,12 +191,19 @@ type WorkspaceAudioSelection = {
   sourceKind: "demo" | "upload";
 };
 
-const STT_MODEL_LABELS: Record<SttModelOption, string> = {
+type ClinicModelOption = "fine_tuned_telephony" | "lora" | "scribe_v2";
+
+const STT_MODEL_LABELS: Record<ClinicModelOption, string> = {
   fine_tuned_telephony: "Whisper Fine-Tuned",
+  lora: "Whisper LoRA",
   scribe_v2: "Scribe v2 Baseline",
 };
 
-const MODEL_COMPARE_ORDER: SttModelOption[] = ["fine_tuned_telephony", "scribe_v2"];
+const CORE_MODEL_COMPARE_ORDER: ClinicModelOption[] = [
+  "fine_tuned_telephony",
+  "lora",
+  "scribe_v2",
+];
 
 type ModelRunState = {
   status: "idle" | "running" | "done" | "error";
@@ -204,16 +211,17 @@ type ModelRunState = {
   error?: string;
 };
 
-const createEmptyModelRuns = (): Record<SttModelOption, ModelRunState> => ({
+const createEmptyModelRuns = (): Record<ClinicModelOption, ModelRunState> => ({
   fine_tuned_telephony: { status: "idle" },
+  lora: { status: "idle" },
   scribe_v2: { status: "idle" },
 });
 
 const DemoPage = () => {
   const [stage, setStage] = useState<ProcessingStage>("idle");
-  const [comparisonRuns, setComparisonRuns] = useState<Record<SttModelOption, ModelRunState>>(() => createEmptyModelRuns());
-  const [activeComparisonTab, setActiveComparisonTab] = useState<SttModelOption>("fine_tuned_telephony");
-  const [runningModel, setRunningModel] = useState<SttModelOption | null>(null);
+  const [comparisonRuns, setComparisonRuns] = useState<Record<ClinicModelOption, ModelRunState>>(() => createEmptyModelRuns());
+  const [activeComparisonTab, setActiveComparisonTab] = useState<ClinicModelOption>("fine_tuned_telephony");
+  const [runningModel, setRunningModel] = useState<ClinicModelOption | null>(null);
   const [selectedSituationId, setSelectedSituationId] = useState<string>(SITUATIONS[0].id);
   const [activeScenario, setActiveScenario] = useState<string | null>(null);
   const [uploadedSelection, setUploadedSelection] = useState<WorkspaceAudioSelection | null>(null);
@@ -241,7 +249,7 @@ const DemoPage = () => {
     let successfulRuns = 0;
     const failures: string[] = [];
 
-    for (const model of MODEL_COMPARE_ORDER) {
+    for (const model of CORE_MODEL_COMPARE_ORDER) {
       setRunningModel(model);
       setComparisonRuns((prev) => ({
         ...prev,
@@ -329,7 +337,7 @@ const DemoPage = () => {
   }, [resetWorkspaceState, runComparison]);
 
   const isProcessing = stage === "uploading";
-  const anyComparisonResult = MODEL_COMPARE_ORDER.some((model) => comparisonRuns[model].status !== "idle");
+  const anyComparisonResult = CORE_MODEL_COMPARE_ORDER.some((model) => comparisonRuns[model].status !== "idle");
   const activeRun = comparisonRuns[activeComparisonTab];
   const activeResult = activeRun.result;
   const activeRunLoading = activeRun.status === "running" || (activeRun.status === "idle" && isProcessing);
@@ -430,7 +438,7 @@ const DemoPage = () => {
 
       <div className="bg-primary text-primary-foreground pt-20">
         <div className="container mx-auto px-6 max-w-[1400px] py-4">
-          <h1 className="text-lg font-semibold text-primary-foreground">Interactive Demo</h1>
+          <h1 className="text-lg font-semibold text-primary-foreground">Clinic Demo</h1>
           <p className="text-sm text-primary-foreground/60 mt-1">
             Six situations each load multiple generated takes from <code className="text-xs opacity-90">public/demo-audio/</code>, and you can also upload
             your own <code className="text-xs opacity-90 ml-1">mp3</code> or <code className="text-xs opacity-90">wav</code> for{" "}
@@ -444,7 +452,7 @@ const DemoPage = () => {
           <aside className="lg:sticky lg:top-24">
             <div className="rounded-lg border border-border bg-card shadow-card overflow-hidden">
               <div className="border-b border-border px-4 py-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Demo Options</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Clinic Options</p>
                 <h2 className="mt-2 text-lg font-semibold text-foreground">Situation Library</h2>
                 <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
                   Keep the situations handy here, then pick the accent or noise take you want to run.
@@ -463,8 +471,9 @@ const DemoPage = () => {
                 <div className="mt-4 rounded-lg border border-border bg-secondary/60 px-3 py-3">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Model Comparison</p>
                   <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                    Each run executes both <span className="font-medium text-foreground">Whisper Fine-Tuned</span> and{" "}
-                    <span className="font-medium text-foreground">Scribe v2 Baseline</span>. Switch tabs in the workspace to compare outputs.
+                    Each run executes <span className="font-medium text-foreground">Whisper Fine-Tuned</span>,{" "}
+                    <span className="font-medium text-foreground">Whisper LoRA</span>,{" "}
+                    and <span className="font-medium text-foreground">Scribe v2 Baseline</span> for clinic scenarios.
                   </p>
                 </div>
                 <input
@@ -564,7 +573,7 @@ const DemoPage = () => {
                       {activeSelection.category}
                     </Badge>
                     <Badge variant="outline" className="rounded-pill">
-                      2-model comparison
+                      {CORE_MODEL_COMPARE_ORDER.length}-model comparison
                     </Badge>
                     <Badge variant="outline" className="rounded-pill">
                       {stage === "done" ? "Loaded" : isProcessing ? "Running" : "Ready"}
@@ -650,7 +659,7 @@ const DemoPage = () => {
             {anyComparisonResult && (
               <div className="rounded-lg border border-border bg-card shadow-card p-3">
                 <div className="flex flex-wrap gap-2">
-                  {MODEL_COMPARE_ORDER.map((model) => {
+                  {CORE_MODEL_COMPARE_ORDER.map((model) => {
                     const run = comparisonRuns[model];
                     const isActive = activeComparisonTab === model;
                     const statusLabel =
@@ -710,7 +719,7 @@ const DemoPage = () => {
                   loading={activeRunLoading}
                   words={activeResult?.corrected_transcript}
                   latency={activeResult?.pipeline_latency_ms}
-                  sttLabel={activeComparisonTab === "scribe_v2" ? "Scribe v2" : "Whisper FT"}
+                  sttLabel={STT_MODEL_LABELS[activeComparisonTab]}
                 />
                 <SummaryPanel
                   className="xl:sticky xl:top-24"

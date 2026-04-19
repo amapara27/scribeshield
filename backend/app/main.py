@@ -207,7 +207,18 @@ async def stream(websocket: WebSocket) -> None:
 @app.post("/transcribe", response_model=TranscribeResponse)
 async def transcribe(
     file: UploadFile = File(...),
-    stt_model: Literal["auto", "scribe_v2", "full_ft"] | None = Form(None),
+    stt_model: Literal[
+        "auto",
+        "scribe_v2",
+        "full_ft",
+        "fine_tuned_telephony",
+        "lora",
+        "whisper_small_lora_normal",
+        "emergency_lora",
+        "emergency",
+        "whisper_tiny_lora_emergency",
+    ]
+    | None = Form(None),
 ) -> TranscribeResponse:
     suffix = Path(file.filename or "upload.wav").suffix or ".wav"
     tmp_path: str | None = None

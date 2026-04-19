@@ -1,4 +1,4 @@
-"""Run benchmark clips through all three non-emergency STT providers and save scribe JSON outputs.
+"""Run benchmark clips through STT providers and save scribe JSON outputs.
 
 Outputs per-provider subdirs and a merged manifest for XGBoost dataset generation.
 clip_ids are prefixed with provider name (e.g. scribev2__clip_01) to keep rows distinct.
@@ -30,6 +30,7 @@ MERGED_CORRECTED_PATH = DEFAULT_MERGED_CORRECTED_PATH
 
 # whisper-small LoRA path (non-production)
 LORA_MODEL_PATH = BACKEND_DIR / "tuned_models/whisper_small_LoRA_normal"
+EMERGENCY_LORA_MODEL_PATH = BACKEND_DIR / "tuned_models/whisper_tiny_LoRA_emergency"
 
 
 async def transcribe_all(provider_name: str, rows: list[dict], out_dir: Path) -> list[dict]:
@@ -49,6 +50,16 @@ async def transcribe_all(provider_name: str, rows: list[dict], out_dir: Path) ->
         if not validation.ready:
             raise RuntimeError(f"LoRA model invalid at {LORA_MODEL_PATH}: {validation.reason}")
         provider = FineTunedTelephonyBatchProvider(model_path=LORA_MODEL_PATH)
+    elif provider_name == "emergency_lora":
+        validation = validate_local_model_path(EMERGENCY_LORA_MODEL_PATH)
+        if not validation.ready:
+            raise RuntimeError(
+                f"Emergency LoRA model invalid at {EMERGENCY_LORA_MODEL_PATH}: {validation.reason}"
+            )
+        provider = FineTunedTelephonyBatchProvider(
+            model_path=EMERGENCY_LORA_MODEL_PATH,
+            provider_name="emergency_lora",
+        )
     elif provider_name == "full_ft":
         provider = FineTunedTelephonyBatchProvider()
     else:
@@ -94,6 +105,7 @@ async def main() -> None:
     providers_to_run = [
         ("scribe_v2", "Scribe V2"),
         ("lora", "whisper-small LoRA"),
+        ("emergency_lora", "whisper-tiny LoRA emergency"),
         ("full_ft", "whisper-small full_ft"),
     ]
 

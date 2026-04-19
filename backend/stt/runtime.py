@@ -15,11 +15,25 @@ from app.schemas import ScribeResult, ScribeWord
 DEFAULT_SPEAKER_ID = "speaker_0"
 DEFAULT_MODEL_PATH = (BACKEND_DIR / "tuned_models" / "full_ft").resolve()
 LEGACY_MODEL_PATH = (BACKEND_DIR / "tuned_models" / "whisper_small_LoRA_normal").resolve()
+EMERGENCY_MODEL_PATH = (BACKEND_DIR / "tuned_models" / "whisper_tiny_LoRA_emergency").resolve()
 OLD_DROPIN_MODEL_PATH = (BACKEND_DIR / "stt" / "models" / "full_ft").resolve()
 _CACHE_LOCK = threading.Lock()
 _LOCAL_PIPELINE_CACHE: dict[str, Any] = {
     "path": None,
     "pipeline": None,
+}
+
+LOCAL_WHISPER_PROVIDERS = {"full_ft", "lora", "emergency_lora"}
+SUPPORTED_PROVIDER_TOKENS = {
+    "auto",
+    "scribe_v2",
+    "full_ft",
+    "fine_tuned_telephony",
+    "lora",
+    "whisper_small_lora_normal",
+    "emergency",
+    "emergency_lora",
+    "whisper_tiny_lora_emergency",
 }
 
 
@@ -45,10 +59,17 @@ class ResolvedModelLocation:
 
 def _normalize_provider_name(raw: str) -> str:
     value = raw.strip().lower()
-    if value in {"auto", "scribe_v2", "full_ft"}:
+    if value == "fine_tuned_telephony":
+        return "full_ft"
+    if value == "whisper_small_lora_normal":
+        return "lora"
+    if value in {"emergency", "whisper_tiny_lora_emergency"}:
+        return "emergency_lora"
+    if value in {"auto", "scribe_v2", "full_ft", "lora", "emergency_lora"}:
         return value
     raise RuntimeError(
-        f"Unsupported STT_PROVIDER={raw!r}; expected auto, scribe_v2, or full_ft"
+        "Unsupported STT_PROVIDER="
+        f"{raw!r}; expected one of: {', '.join(sorted(SUPPORTED_PROVIDER_TOKENS))}"
     )
 
 
@@ -130,18 +151,10 @@ def _configured_model_path() -> Path:
     return settings.FINE_TUNED_STT_MODEL_PATH.expanduser().resolve()
 
 
-def candidate_local_model_paths() -> list[Path]:
-    configured = _configured_model_path()
-    # Search configured path first, then known repository defaults.
-    candidates: list[Path] = [
-        configured,
-        DEFAULT_MODEL_PATH,
-        LEGACY_MODEL_PATH,
-        OLD_DROPIN_MODEL_PATH,
-    ]
+def _dedupe_paths(paths: list[Path]) -> list[Path]:
     deduped: list[Path] = []
     seen: set[str] = set()
-    for candidate in candidates:
+    for candidate in paths:
         key = str(candidate)
         if key in seen:
             continue
@@ -150,12 +163,11 @@ def candidate_local_model_paths() -> list[Path]:
     return deduped
 
 
-def resolve_local_model_location(path: Path | None = None) -> ResolvedModelLocation:
-    if path is not None:
-        validation = _validate_single_model_path(path)
-        return ResolvedModelLocation(validation=validation, searched_paths=(validation.path,))
-
-    validations = [_validate_single_model_path(candidate) for candidate in candidate_local_model_paths()]
+def _resolve_from_candidates(candidates: list[Path]) -> ResolvedModelLocation:
+    if not candidates:
+        raise RuntimeError("No model candidates configured")
+    deduped = _dedupe_paths(candidates)
+    validations = [_validate_single_model_path(candidate) for candidate in deduped]
     ready = next((item for item in validations if item.ready), None)
     if ready is not None:
         return ResolvedModelLocation(
@@ -168,6 +180,79 @@ def resolve_local_model_location(path: Path | None = None) -> ResolvedModelLocat
         validation=ModelValidation(ready=False, reason=reason, path=last.path),
         searched_paths=tuple(item.path for item in validations),
     )
+
+
+def resolve_named_model_location(provider_name: str) -> ResolvedModelLocation:
+    provider = _normalize_provider_name(provider_name)
+    if provider == "auto":
+        return _resolve_from_candidates(candidate_local_model_paths())
+    if provider == "full_ft":
+        return _resolve_from_candidates(candidate_full_ft_model_paths())
+    if provider == "lora":
+        return _resolve_from_candidates(candidate_lora_model_paths())
+    if provider == "emergency_lora":
+        return _resolve_from_candidates(candidate_emergency_model_paths())
+    raise RuntimeError(f"No local model path resolution for provider={provider!r}")
+
+
+def _provider_name_for_validation(validation: ModelValidation) -> str:
+    if validation.model_format == "lora_adapter":
+        if str(validation.path) == str(EMERGENCY_MODEL_PATH):
+            return "emergency_lora"
+        return "lora"
+    return "full_ft"
+
+
+def _provider_label(provider_name: str) -> str:
+    provider = _normalize_provider_name(provider_name)
+    labels = {
+        "scribe_v2": "scribe_v2",
+        "full_ft": "full_ft",
+        "lora": "lora",
+        "emergency_lora": "emergency_lora",
+    }
+    return labels.get(provider, provider)
+
+
+def is_local_whisper_provider(provider_name: str | None) -> bool:
+    if not provider_name:
+        return False
+    return _normalize_provider_name(provider_name) in LOCAL_WHISPER_PROVIDERS
+
+
+def candidate_full_ft_model_paths() -> list[Path]:
+    return _dedupe_paths(
+        [
+            _configured_model_path(),
+            DEFAULT_MODEL_PATH,
+            OLD_DROPIN_MODEL_PATH,
+        ]
+    )
+
+
+def candidate_lora_model_paths() -> list[Path]:
+    return _dedupe_paths([LEGACY_MODEL_PATH])
+
+
+def candidate_emergency_model_paths() -> list[Path]:
+    return _dedupe_paths([EMERGENCY_MODEL_PATH])
+
+
+def candidate_local_model_paths() -> list[Path]:
+    return _dedupe_paths(
+        [
+            *candidate_full_ft_model_paths(),
+            *candidate_lora_model_paths(),
+        ]
+    )
+
+
+def resolve_local_model_location(path: Path | None = None) -> ResolvedModelLocation:
+    if path is not None:
+        validation = _validate_single_model_path(path)
+        return ResolvedModelLocation(validation=validation, searched_paths=(validation.path,))
+
+    return _resolve_from_candidates(candidate_local_model_paths())
 
 
 def validate_local_model_path(path: Path | None = None) -> ModelValidation:
@@ -389,11 +474,15 @@ class ScribeV2BatchProvider:
 class FineTunedTelephonyBatchProvider:
     name = "full_ft"
 
-    def __init__(self, model_path: Path | None = None):
-        validation = resolve_local_model_location(model_path).validation
+    def __init__(self, model_path: Path | None = None, *, provider_name: str = "full_ft"):
+        if model_path is None:
+            validation = resolve_named_model_location(provider_name).validation
+        else:
+            validation = resolve_local_model_location(model_path).validation
         if not validation.ready:
             raise RuntimeError(f"Fine-tuned STT model invalid: {validation.reason}")
         self._model_path = validation.path
+        self.name = _normalize_provider_name(provider_name)
 
     async def transcribe_batch(self, wav_path: str, keyterms: list[str]) -> ScribeResult:
         del keyterms
@@ -426,41 +515,56 @@ def get_batch_provider(provider_override: str | None = None) -> BatchSttProvider
     provider = _normalize_provider_name(provider_override or settings.STT_PROVIDER)
     if provider == "scribe_v2":
         return ScribeV2BatchProvider()
-    if provider == "full_ft":
-        return FineTunedTelephonyBatchProvider()
+    if provider in LOCAL_WHISPER_PROVIDERS:
+        resolved = resolve_named_model_location(provider).validation
+        if not resolved.ready:
+            raise RuntimeError(f"Fine-tuned STT model invalid: {resolved.reason}")
+        return FineTunedTelephonyBatchProvider(
+            model_path=resolved.path,
+            provider_name=provider,
+        )
 
-    validation = resolve_local_model_location().validation
+    validation = resolve_named_model_location("auto").validation
     if validation.ready:
-        return FineTunedTelephonyBatchProvider(validation.path)
+        return FineTunedTelephonyBatchProvider(
+            model_path=validation.path,
+            provider_name=_provider_name_for_validation(validation),
+        )
     return ScribeV2BatchProvider()
 
 
 def ensure_runtime_ready() -> None:
     provider = _normalize_provider_name(settings.STT_PROVIDER)
-    if provider != "full_ft":
+    if provider not in LOCAL_WHISPER_PROVIDERS:
         return
-    local_provider = FineTunedTelephonyBatchProvider()
-    _load_local_pipeline(local_provider._model_path)
+    local_model = resolve_named_model_location(provider).validation
+    if not local_model.ready:
+        raise RuntimeError(f"Fine-tuned STT model invalid: {local_model.reason}")
+    _load_local_pipeline(local_model.path)
 
 
 def batch_provider_status() -> str:
     provider = _normalize_provider_name(settings.STT_PROVIDER)
     loaded_path = _LOCAL_PIPELINE_CACHE["path"]
-    resolved = resolve_local_model_location()
-    validation = resolved.validation
-    searched = ", ".join(str(path) for path in resolved.searched_paths)
     if provider == "scribe_v2":
         return "scribe_v2 (forced)"
-    if provider == "full_ft":
+    if provider in LOCAL_WHISPER_PROVIDERS:
+        resolved = resolve_named_model_location(provider)
+        validation = resolved.validation
+        label = _provider_label(provider)
         if validation.ready:
             if loaded_path == str(validation.path):
-                return f"full_ft (forced; loaded from {validation.path})"
-            return f"full_ft (forced; ready at {validation.path})"
-        return f"full_ft (forced; invalid: {validation.reason})"
+                return f"{label} (forced; loaded from {validation.path})"
+            return f"{label} (forced; ready at {validation.path})"
+        return f"{label} (forced; invalid: {validation.reason})"
+    resolved = resolve_named_model_location("auto")
+    validation = resolved.validation
+    searched = ", ".join(str(path) for path in resolved.searched_paths)
     if validation.ready:
+        label = _provider_label(_provider_name_for_validation(validation))
         if loaded_path == str(validation.path):
-            return f"full_ft (auto; loaded from {validation.path})"
-        return f"full_ft (auto; ready at {validation.path})"
+            return f"{label} (auto; loaded from {validation.path})"
+        return f"{label} (auto; ready at {validation.path})"
     return f"scribe_v2 (auto fallback; searched {searched}; local model unavailable: {validation.reason})"
 
 

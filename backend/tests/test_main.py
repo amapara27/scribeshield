@@ -23,7 +23,8 @@ from app.schemas import (
 @pytest.fixture
 def client(monkeypatch):
     # ---- Mock Person A: preprocessing returns a dummy path ----
-    async def fake_preprocess(input_path: str) -> str:
+    async def fake_preprocess(input_path: str, *, stt_provider: str | None = None) -> str:
+        del stt_provider
         return input_path
 
     monkeypatch.setattr(pipeline.preprocessing, "preprocess", fake_preprocess)
@@ -42,7 +43,8 @@ def client(monkeypatch):
     monkeypatch.setattr(scribe, "transcribe_batch", fake_transcribe)
 
     # ---- Mock Person A: uncertainty returns parallel HIGH confidence words ----
-    def fake_score(words, keyterms, phonetic_map, correction_history):
+    def fake_score(words, keyterms, phonetic_map, correction_history, *, stt_provider_name=None):
+        del stt_provider_name
         return [
             WordWithConfidence(
                 word=w.text,
@@ -114,7 +116,16 @@ def test_transcribe_end_to_end(client):
     assert "total" in body["pipeline_latency_ms"]
 
 
-def test_transcribe_passes_requested_stt_model(monkeypatch):
+@pytest.mark.parametrize(
+    "requested_model",
+    [
+        "full_ft",
+        "lora",
+        "emergency_lora",
+        "fine_tuned_telephony",
+    ],
+)
+def test_transcribe_passes_requested_stt_model(monkeypatch, requested_model: str):
     captured: dict[str, str | None] = {"stt_model": None}
 
     async def fake_run_full_pipeline(audio_path: str, *, stt_provider_override: str | None = None):
@@ -139,12 +150,12 @@ def test_transcribe_passes_requested_stt_model(monkeypatch):
     fresh = TestClient(main.app)
     resp = fresh.post(
         "/transcribe",
-        data={"stt_model": "full_ft"},
+        data={"stt_model": requested_model},
         files={"file": ("test.wav", b"RIFF....fake-audio", "audio/wav")},
     )
 
     assert resp.status_code == 200, resp.text
-    assert captured["stt_model"] == "full_ft"
+    assert captured["stt_model"] == requested_model
 
 
 def test_transcribe_returns_501_when_person_a_stub(monkeypatch):

@@ -83,6 +83,10 @@ class _XGBoostRiskScorer:
 _xgb_scorer = _XGBoostRiskScorer()
 
 
+def _xgboost_enabled_for_provider(stt_provider_name: str | None) -> bool:
+    return stt_provider_name in {"scribe_v2", "full_ft", "lora", "fine_tuned_telephony"}
+
+
 def score_words(
     words: list[ScribeWord],
     keyterms: list[str],
@@ -114,7 +118,10 @@ def score_words(
     keyterms_norm = {normalize(k) for k in keyterms if k}
     durations = [max(0, w.end_ms - w.start_ms) for w in words]
 
-    xgb_risks = _xgb_scorer.score_words(words, keyterms, correction_history)
+    if _xgboost_enabled_for_provider(stt_provider_name):
+        xgb_risks = _xgb_scorer.score_words(words, keyterms, correction_history)
+    else:
+        xgb_risks = [None for _ in words]
 
     out: list[WordWithConfidence] = []
     for i, w in enumerate(words):
@@ -166,12 +173,12 @@ def score_words(
             score += 0.15
             signals.append("correction_likelihood")
 
-        # 5) Fine-tuned Whisper review boost
+        # 5) Local Whisper review boost
         # Whisper outputs can be semantically plausible while still requiring
         # verification on medication terms, so force at least MEDIUM review on
         # medical-shaped tokens for this provider.
         if (
-            stt_provider_name == "full_ft"
+            stt_provider_name in {"full_ft", "lora", "emergency_lora"}
             and word_norm
             and matches_medical(word_norm)
             and score < 0.25

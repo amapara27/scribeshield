@@ -33,10 +33,11 @@ const Navbar = () => {
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-6">
           <Link to="/" className={`text-sm font-medium hover:text-accent transition-colors ${textColor}`}>Home</Link>
-          <Link to="/demo" className={`text-sm font-medium hover:text-accent transition-colors ${textColor}`}>Demo</Link>
+          <Link to="/clinic" className={`text-sm font-medium hover:text-accent transition-colors ${textColor}`}>Clinic</Link>
+          <Link to="/emergency" className={`text-sm font-medium hover:text-accent transition-colors ${textColor}`}>Emergency</Link>
           <Link to="/benchmark" className={`text-sm font-medium hover:text-accent transition-colors ${textColor}`}>Benchmark</Link>
           <Button asChild variant="default" className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-pill px-6">
-            <Link to="/demo">Try Demo</Link>
+            <Link to="/clinic">Try Clinic</Link>
           </Button>
         </div>
 
@@ -50,10 +51,11 @@ const Navbar = () => {
       {menuOpen && (
         <div className="md:hidden bg-background border-t px-6 py-4 space-y-3 shadow-card">
           <Link to="/" className="block text-sm font-medium text-foreground" onClick={() => setMenuOpen(false)}>Home</Link>
-          <Link to="/demo" className="block text-sm font-medium text-foreground" onClick={() => setMenuOpen(false)}>Demo</Link>
+          <Link to="/clinic" className="block text-sm font-medium text-foreground" onClick={() => setMenuOpen(false)}>Clinic</Link>
+          <Link to="/emergency" className="block text-sm font-medium text-foreground" onClick={() => setMenuOpen(false)}>Emergency</Link>
           <Link to="/benchmark" className="block text-sm font-medium text-foreground" onClick={() => setMenuOpen(false)}>Benchmark</Link>
           <Button asChild variant="default" className="bg-accent text-accent-foreground w-full rounded-pill">
-            <Link to="/demo" onClick={() => setMenuOpen(false)}>Try Demo</Link>
+            <Link to="/clinic" onClick={() => setMenuOpen(false)}>Try Clinic</Link>
           </Button>
         </div>
       )}

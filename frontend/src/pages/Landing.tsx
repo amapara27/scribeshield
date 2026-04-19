@@ -21,10 +21,10 @@ const Landing = () => {
           </p>
           <div className="flex gap-3 mt-6">
             <Button asChild size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-md px-5 text-sm">
-              <Link to="/demo">Try Demo <ArrowRight className="ml-1.5 h-3.5 w-3.5" /></Link>
+              <Link to="/clinic">Try Clinic <ArrowRight className="ml-1.5 h-3.5 w-3.5" /></Link>
             </Button>
             <Button asChild size="sm" className="border border-primary-foreground/20 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 rounded-md px-5 text-sm">
-              <Link to="/benchmark">Benchmark Results</Link>
+              <Link to="/emergency">Emergency Demo</Link>
             </Button>
           </div>
         </div>
