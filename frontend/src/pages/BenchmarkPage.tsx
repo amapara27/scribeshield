@@ -50,6 +50,11 @@ const fmtPercent = (value: number | null | undefined, decimals = 1): string => {
   return `${pct.toFixed(decimals)}%`;
 };
 
+const toRatio = (value: number | null | undefined): number | null => {
+  if (value === null || value === undefined || Number.isNaN(value)) return null;
+  return Math.abs(value) <= 1 ? value : value / 100;
+};
+
 const BenchmarkPage = () => {
   const [data, setData] = useState<BenchmarkResponse | null>(null);
   const [dataSource, setDataSource] = useState<"api" | "unavailable">("unavailable");
@@ -288,13 +293,31 @@ const BenchmarkPage = () => {
 
   const modelBenchmarks = useMemo(
     () =>
-      [...(data?.model_benchmarks ?? [])].sort(
-        (a, b) => (toPercent(a.avg_wer) ?? Number.POSITIVE_INFINITY) - (toPercent(b.avg_wer) ?? Number.POSITIVE_INFINITY),
-      ),
+      (data?.model_benchmarks ?? [])
+        .map((row) => {
+          const werRatio = toRatio(row.avg_wer) ?? 1.0;
+          const digitRatio = toRatio(row.avg_digit_accuracy) ?? 0.0;
+          const medicalRatio = toRatio(row.avg_medical_keyword_accuracy) ?? 0.0;
+          const qualityScore = (0.7 * medicalRatio + 0.2 * digitRatio + 0.1 * (1 - werRatio)) * 100;
+          return {
+            ...row,
+            qualityScore,
+          };
+        })
+        .sort((a, b) => b.qualityScore - a.qualityScore),
     [data],
   );
 
   const bestModel = modelBenchmarks[0] ?? null;
+  const lowestWerModel = useMemo(
+    () =>
+      [...modelBenchmarks].sort(
+        (a, b) =>
+          (toPercent(a.avg_wer) ?? Number.POSITIVE_INFINITY) -
+          (toPercent(b.avg_wer) ?? Number.POSITIVE_INFINITY),
+      )[0] ?? null,
+    [modelBenchmarks],
+  );
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -328,7 +351,12 @@ const BenchmarkPage = () => {
               {fmtPercent(data.aggregate.avg_improvement_pct)} average correction lift.
               Verification rate {fmtPercent(data.metrics.verification_rate)}, unsafe
               guess rate {fmtPercent(data.metrics.unsafe_guess_rate)}.
-              {bestModel ? ` Best STT WER: ${bestModel.label} at ${fmtPercent(bestModel.avg_wer)}.` : ""}
+              {bestModel
+                ? ` Top overall model: ${bestModel.label} (${bestModel.qualityScore.toFixed(1)} quality score).`
+                : ""}
+              {lowestWerModel
+                ? ` Lowest WER on this set: ${lowestWerModel.label} at ${fmtPercent(lowestWerModel.avg_wer)}.`
+                : ""}
             </p>
           ) : (
             <p className="text-sm text-muted-foreground mt-2">
@@ -366,14 +394,15 @@ const BenchmarkPage = () => {
               <div>
                 <h2 className="text-2xl font-bold">Model Benchmarks</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Real benchmark averages for all local demo providers, including emergency fallback.
+                  Ranked by healthcare-weighted quality score (medical keyword accuracy,
+                  digit accuracy, then WER), including emergency fallback.
                 </p>
               </div>
               {bestModel && (
                 <div className="rounded-lg border border-success/30 bg-success/10 px-4 py-3 text-right">
-                  <div className="text-xs uppercase tracking-[0.2em] text-success">Best WER</div>
+                  <div className="text-xs uppercase tracking-[0.2em] text-success">Best Overall</div>
                   <div className="text-lg font-semibold text-foreground">
-                    {bestModel.label}: {fmtPercent(bestModel.avg_wer)}
+                    {bestModel.label}: {bestModel.qualityScore.toFixed(1)}
                   </div>
                 </div>
               )}
@@ -385,6 +414,7 @@ const BenchmarkPage = () => {
                   <thead className="bg-primary text-primary-foreground">
                     <tr>
                       <th className="px-4 py-3 text-left">Model</th>
+                      <th className="px-4 py-3 text-left">Quality Score</th>
                       <th className="px-4 py-3 text-left">Clips</th>
                       <th className="px-4 py-3 text-left">WER</th>
                       <th className="px-4 py-3 text-left">CER</th>
@@ -399,6 +429,7 @@ const BenchmarkPage = () => {
                         className={`border-t ${index % 2 === 0 ? "" : "bg-secondary/50"}`}
                       >
                         <td className="px-4 py-3 font-medium text-foreground">{row.label}</td>
+                        <td className="px-4 py-3">{row.qualityScore.toFixed(1)}</td>
                         <td className="px-4 py-3">{row.clip_count}</td>
                         <td className="px-4 py-3">{fmtPercent(row.avg_wer)}</td>
                         <td className="px-4 py-3">{fmtPercent(row.avg_cer)}</td>
