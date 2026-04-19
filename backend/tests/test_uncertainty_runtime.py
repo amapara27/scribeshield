@@ -11,6 +11,7 @@ def _w(text: str, start_ms: int, end_ms: int) -> ScribeWord:
 
 
 def test_uncertainty_rule_based_without_xgboost(monkeypatch):
+    monkeypatch.setattr(uncertainty.settings, "XGBOOST_RUNTIME_ENABLED", False)
     monkeypatch.setattr(
         uncertainty._xgb_scorer,
         "score_words",
@@ -35,6 +36,7 @@ def test_uncertainty_rule_based_without_xgboost(monkeypatch):
 
 
 def test_uncertainty_uses_xgboost_risk_when_available(monkeypatch):
+    monkeypatch.setattr(uncertainty.settings, "XGBOOST_RUNTIME_ENABLED", True)
     monkeypatch.setattr(
         uncertainty._xgb_scorer,
         "score_words",
@@ -55,6 +57,7 @@ def test_uncertainty_uses_xgboost_risk_when_available(monkeypatch):
 
 
 def test_uncertainty_skips_xgboost_for_emergency_provider(monkeypatch):
+    monkeypatch.setattr(uncertainty.settings, "XGBOOST_RUNTIME_ENABLED", True)
     called = {"xgb": False}
 
     def _score(words, keyterms, correction_history):
@@ -78,6 +81,7 @@ def test_uncertainty_skips_xgboost_for_emergency_provider(monkeypatch):
 
 @pytest.mark.parametrize("provider_name", ["full_ft", "lora", "emergency_lora"])
 def test_whisper_medical_words_get_review_highlight(monkeypatch, provider_name: str):
+    monkeypatch.setattr(uncertainty.settings, "XGBOOST_RUNTIME_ENABLED", False)
     monkeypatch.setattr(
         uncertainty._xgb_scorer,
         "score_words",

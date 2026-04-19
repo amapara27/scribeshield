@@ -331,7 +331,15 @@ def _torch_dtype(torch_module: Any) -> Any | None:
     value = settings.FINE_TUNED_STT_DTYPE.strip().lower()
     if value == "auto":
         configured = settings.FINE_TUNED_STT_DEVICE.strip().lower()
-        if configured in {"cuda", "mps"} or (
+        if configured == "cuda":
+            if bool(getattr(torch_module.cuda, "is_available", lambda: False)()):
+                return getattr(torch_module, "float16", None)
+            return getattr(torch_module, "float32", None)
+        if configured == "mps":
+            if _mps_available(torch_module):
+                return getattr(torch_module, "float16", None)
+            return getattr(torch_module, "float32", None)
+        if (
             configured == "auto"
             and (
                 bool(getattr(torch_module.cuda, "is_available", lambda: False)())
@@ -366,9 +374,9 @@ def _pipeline_device(torch_module: Any) -> int | str:
     if configured == "cpu":
         return -1
     if configured == "cuda":
-        return 0
+        return 0 if bool(getattr(torch_module.cuda, "is_available", lambda: False)()) else -1
     if configured == "mps":
-        return "mps"
+        return "mps" if _mps_available(torch_module) else -1
     if configured != "auto":
         raise RuntimeError(
             f"Unsupported FINE_TUNED_STT_DEVICE={settings.FINE_TUNED_STT_DEVICE!r}; expected auto, cpu, cuda, or mps"

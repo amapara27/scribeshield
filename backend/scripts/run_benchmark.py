@@ -38,6 +38,32 @@ _WORD_RE = re.compile(r"[a-z0-9]+(?:'[a-z0-9]+)?")
 _DIGIT_RE = re.compile(r"\d")
 _SOURCE_CLIP_RE = re.compile(r"\((clip_[0-9]{4}_[a-z0-9_]+)\)")
 _WHISPER_PIPELINE_CACHE: dict[str, Any] = {}
+MODEL_BENCHMARK_SPECS: list[dict[str, str]] = [
+    {
+        "id": "fine_tuned_telephony",
+        "label": "Whisper Fine-Tuned",
+        "provider": "full_ft",
+        "field": "full_ft_text",
+    },
+    {
+        "id": "lora",
+        "label": "Whisper LoRA",
+        "provider": "lora",
+        "field": "lora_text",
+    },
+    {
+        "id": "scribe_v2",
+        "label": "ScribeV2",
+        "provider": "scribe_v2",
+        "field": "scribe_v2_text",
+    },
+    {
+        "id": "emergency_lora",
+        "label": "Emergency LoRA",
+        "provider": "emergency_lora",
+        "field": "emergency_lora_text",
+    },
+]
 
 
 def _parse_args() -> argparse.Namespace:
@@ -520,6 +546,7 @@ def _add_optional_fields(payload: dict[str, Any]) -> dict[str, Any]:
         metrics.setdefault("medical_keyword_accuracy_coverage", None)
 
     payload.setdefault("comparison", None)
+    payload.setdefault("model_benchmarks", [])
     return payload
 
 
@@ -652,7 +679,48 @@ def _recompute(
         wer_scale=wer_scale,
         rate_scale=rate_scale,
     )
+    payload["model_benchmarks"] = _compute_model_benchmarks(
+        eval_rows=parsed_eval_rows,
+        manifest_rows_by_clip=manifest_rows_by_clip,
+        medical_terms=medical_terms,
+        wer_scale=wer_scale,
+        rate_scale=rate_scale,
+    )
     return payload
+
+
+def _compute_model_benchmarks(
+    *,
+    eval_rows: Sequence[dict[str, Any]],
+    manifest_rows_by_clip: dict[str, dict[str, str]],
+    medical_terms: list[list[str]],
+    wer_scale: float,
+    rate_scale: float,
+) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for spec in MODEL_BENCHMARK_SPECS:
+        summary = _model_summary_from_eval_rows(
+            eval_rows=eval_rows,
+            manifest_rows_by_clip=manifest_rows_by_clip,
+            medical_terms=medical_terms,
+            hypothesis_field=spec["field"],
+            wer_scale=wer_scale,
+            rate_scale=rate_scale,
+        )
+        if not summary:
+            continue
+        rows.append(
+            {
+                "id": spec["id"],
+                "label": spec["label"],
+                "clip_count": summary["clip_count"],
+                "avg_wer": summary["avg_wer"],
+                "avg_cer": summary["avg_cer"],
+                "avg_digit_accuracy": summary["avg_digit_accuracy"],
+                "avg_medical_keyword_accuracy": summary["avg_medical_keyword_accuracy"],
+            }
+        )
+    return rows
 
 
 def _model_summary_from_eval_rows(
@@ -968,6 +1036,49 @@ async def _maybe_add_model_comparison_transcripts(
         eval_row["model_comparison_error"] = str(exc)
 
 
+async def _add_model_benchmark_transcripts(
+    eval_rows: Sequence[dict[str, Any]],
+    *,
+    audio_paths_by_clip: dict[str, Path],
+) -> None:
+    from stt.runtime import get_batch_provider, resolve_named_model_location  # type: ignore
+
+    for spec in MODEL_BENCHMARK_SPECS:
+        provider_name = spec["provider"]
+        hypothesis_field = spec["field"]
+        error_field = f"{hypothesis_field}_error"
+
+        if provider_name != "scribe_v2":
+            validation = resolve_named_model_location(provider_name).validation
+            if not validation.ready:
+                reason = f"provider unavailable: {validation.reason}"
+                for eval_row in eval_rows:
+                    eval_row[error_field] = reason
+                continue
+
+        try:
+            provider = get_batch_provider(provider_name)
+        except Exception as exc:  # noqa: BLE001
+            reason = f"provider init failed: {exc}"
+            for eval_row in eval_rows:
+                eval_row[error_field] = reason
+            continue
+
+        for eval_row in eval_rows:
+            clip_id = str(eval_row.get("clip_id") or "").strip()
+            if not clip_id:
+                continue
+            audio_path = audio_paths_by_clip.get(clip_id)
+            if audio_path is None:
+                eval_row[error_field] = f"missing benchmark audio for clip {clip_id}"
+                continue
+            try:
+                result = await provider.transcribe_batch(str(audio_path), [])
+                eval_row[hypothesis_field] = _join_text([word.text for word in result.words])
+            except Exception as exc:  # noqa: BLE001
+                eval_row[error_field] = str(exc)
+
+
 async def _generate_eval_rows_via_pipeline(
     manifest_rows_by_clip: dict[str, dict[str, str]],
     *,
@@ -991,6 +1102,7 @@ async def _generate_eval_rows_via_pipeline(
     fine_tuned_model_path = fine_tuned_validation.path if fine_tuned_validation.ready else None
 
     eval_rows: list[dict[str, Any]] = []
+    audio_paths_by_clip: dict[str, Path] = {}
     verified_changes = 0
     unresolved_flagged = 0
     unsafe_changes = 0
@@ -1008,6 +1120,7 @@ async def _generate_eval_rows_via_pipeline(
             )
 
         audio_path = _resolve_benchmark_audio_path(manifest_row, manifest_path)
+        audio_paths_by_clip[clip_id] = audio_path
         cleaned_path = await preprocessing.preprocess(str(audio_path))
 
         baseline_result = await scribe.transcribe_batch(str(audio_path), [])
@@ -1076,6 +1189,11 @@ async def _generate_eval_rows_via_pipeline(
                     unsafe_changes += 1
             elif corrected_word.unverified:
                 unresolved_flagged += 1
+
+    await _add_model_benchmark_transcripts(
+        eval_rows,
+        audio_paths_by_clip=audio_paths_by_clip,
+    )
 
     verification_denominator = verified_changes + unresolved_flagged
     metrics = {

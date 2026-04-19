@@ -196,7 +196,7 @@ type ClinicModelOption = "fine_tuned_telephony" | "lora" | "scribe_v2";
 const STT_MODEL_LABELS: Record<ClinicModelOption, string> = {
   fine_tuned_telephony: "Whisper Fine-Tuned",
   lora: "Whisper LoRA",
-  scribe_v2: "Scribe v2 Baseline",
+  scribe_v2: "ScribeV2",
 };
 
 const CORE_MODEL_COMPARE_ORDER: ClinicModelOption[] = [
@@ -206,7 +206,7 @@ const CORE_MODEL_COMPARE_ORDER: ClinicModelOption[] = [
 ];
 
 type ModelRunState = {
-  status: "idle" | "running" | "done" | "error";
+  status: "idle" | "pending" | "running" | "done" | "error";
   result?: TranscribeResponse;
   error?: string;
 };
@@ -217,11 +217,15 @@ const createEmptyModelRuns = (): Record<ClinicModelOption, ModelRunState> => ({
   scribe_v2: { status: "idle" },
 });
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const isTransientLoadError = (message: string) =>
+  /load failed|failed to fetch|networkerror|network request failed/i.test(message);
+
 const DemoPage = () => {
   const [stage, setStage] = useState<ProcessingStage>("idle");
   const [comparisonRuns, setComparisonRuns] = useState<Record<ClinicModelOption, ModelRunState>>(() => createEmptyModelRuns());
   const [activeComparisonTab, setActiveComparisonTab] = useState<ClinicModelOption>("fine_tuned_telephony");
-  const [runningModel, setRunningModel] = useState<ClinicModelOption | null>(null);
   const [selectedSituationId, setSelectedSituationId] = useState<string>(SITUATIONS[0].id);
   const [activeScenario, setActiveScenario] = useState<string | null>(null);
   const [uploadedSelection, setUploadedSelection] = useState<WorkspaceAudioSelection | null>(null);
@@ -238,7 +242,6 @@ const DemoPage = () => {
     setErrorMessage(null);
     setComparisonRuns(createEmptyModelRuns());
     setActiveComparisonTab("fine_tuned_telephony");
-    setRunningModel(null);
     setStage("uploading");
     setAudioCurrentTime(0);
     setAudioDuration(0);
@@ -246,11 +249,14 @@ const DemoPage = () => {
   }, []);
 
   const runComparison = useCallback(async (file: File) => {
-    let successfulRuns = 0;
-    const failures: string[] = [];
+    setComparisonRuns((prev) => ({
+      ...prev,
+      fine_tuned_telephony: { status: "pending" },
+      lora: { status: "pending" },
+      scribe_v2: { status: "pending" },
+    }));
 
-    for (const model of CORE_MODEL_COMPARE_ORDER) {
-      setRunningModel(model);
+    const runSingleModel = async (model: ClinicModelOption) => {
       setComparisonRuns((prev) => ({
         ...prev,
         [model]: { status: "running" },
@@ -258,27 +264,58 @@ const DemoPage = () => {
 
       try {
         const data = await transcribeAudio(file, model);
-        successfulRuns += 1;
         setComparisonRuns((prev) => ({
           ...prev,
           [model]: { status: "done", result: data },
         }));
-        if (successfulRuns === 1) setActiveComparisonTab(model);
+        return { model, success: true as const };
       } catch (e) {
-        const message = e instanceof Error ? e.message : "Transcription failed";
-        failures.push(`${STT_MODEL_LABELS[model]}: ${message}`);
+        let message = e instanceof Error ? e.message : "Transcription failed";
+        // Retry once for transient browser/network fetch failures.
+        if (isTransientLoadError(message)) {
+          await sleep(500);
+          try {
+            const data = await transcribeAudio(file, model);
+            setComparisonRuns((prev) => ({
+              ...prev,
+              [model]: { status: "done", result: data },
+            }));
+            return { model, success: true as const };
+          } catch (retryError) {
+            message = retryError instanceof Error ? retryError.message : message;
+          }
+        }
+
         setComparisonRuns((prev) => ({
           ...prev,
           [model]: { status: "error", error: message },
         }));
+        return { model, success: false as const, message };
       }
-    }
+    };
 
-    setRunningModel(null);
+    const outcomes: Array<
+      | { model: ClinicModelOption; success: true }
+      | { model: ClinicModelOption; success: false; message: string }
+    > = [];
+    // Run Scribe immediately in parallel while Whisper variants run one-by-one.
+    // This keeps the UI responsive and avoids overloading local inference runtime.
+    const scribePromise = runSingleModel("scribe_v2");
+    outcomes.push(await runSingleModel("fine_tuned_telephony"));
+    outcomes.push(await runSingleModel("lora"));
+    outcomes.push(await scribePromise);
 
-    if (successfulRuns > 0) {
+    const firstSuccessfulModel = CORE_MODEL_COMPARE_ORDER.find((model) =>
+      outcomes.some((outcome) => outcome.model === model && outcome.success),
+    );
+    const failures = outcomes
+      .filter((outcome) => !outcome.success)
+      .map((outcome) => `${STT_MODEL_LABELS[outcome.model]}: ${outcome.message}`);
+
+    if (firstSuccessfulModel) {
+      setActiveComparisonTab(firstSuccessfulModel);
       setStage("done");
-      setErrorMessage(null);
+      setErrorMessage(failures.length > 0 ? failures.join(" | ") : null);
       return;
     }
 
@@ -473,7 +510,7 @@ const DemoPage = () => {
                   <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
                     Each run executes <span className="font-medium text-foreground">Whisper Fine-Tuned</span>,{" "}
                     <span className="font-medium text-foreground">Whisper LoRA</span>,{" "}
-                    and <span className="font-medium text-foreground">Scribe v2 Baseline</span> for clinic scenarios.
+                    and <span className="font-medium text-foreground">ScribeV2</span> for clinic scenarios.
                   </p>
                 </div>
                 <input
@@ -696,7 +733,7 @@ const DemoPage = () => {
               <div className="bg-card rounded-lg shadow-card p-4 flex items-center gap-3">
                 <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin shrink-0" />
                 <p className="text-sm text-foreground">
-                  Running {runningModel ? STT_MODEL_LABELS[runningModel] : "model comparison"} on the server...
+                  Running all models on the server...
                 </p>
               </div>
             )}

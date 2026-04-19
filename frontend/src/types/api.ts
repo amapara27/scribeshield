@@ -151,6 +151,7 @@ export interface BenchmarkResponse {
   metrics: BenchmarkMetrics;
   aggregate: BenchmarkAggregate;
   comparison?: BenchmarkModelComparison | null;
+  model_benchmarks?: BenchmarkModelSummary[];
 }
 
 export interface LearningLoopHistoryPoint {

@@ -166,6 +166,7 @@ class BenchmarkResponse(BaseModel):
     metrics: BenchmarkMetrics
     aggregate: BenchmarkAggregate
     comparison: BenchmarkModelComparison | None = None
+    model_benchmarks: list[BenchmarkModelSummary] = Field(default_factory=list)
 
 
 class LearningLoopHistoryPoint(BaseModel):

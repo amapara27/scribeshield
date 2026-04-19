@@ -63,6 +63,7 @@ def test_recompute_fallback_adds_optional_fields(tmp_path):
     assert agg["avg_corrected_digit_accuracy"] is None
     assert agg["avg_raw_medical_keyword_accuracy"] is None
     assert agg["avg_corrected_medical_keyword_accuracy"] is None
+    assert out["model_benchmarks"] == []
 
 
 def test_recompute_metrics_from_eval_rows(tmp_path):
@@ -126,6 +127,36 @@ def test_recompute_builds_model_comparison_when_eval_rows_include_both_models(tm
     assert comparison["delta"]["wer_reduction"] > 0
     assert comparison["delta"]["digit_accuracy_gain"] > 0
     assert comparison["delta"]["medical_keyword_accuracy_gain"] > 0
+
+
+def test_recompute_builds_multi_model_benchmarks_when_eval_rows_include_all_models(tmp_path):
+    mod = _load_run_benchmark_module()
+    payload = _baseline_payload()
+
+    eval_row = {
+        "clip_id": "clip_a",
+        "category": "Medication Refill",
+        "difficulty": "Standard",
+        "ground_truth": "take metformin 50 mg daily",
+        "raw_text": "take metfornin 15 mg daily",
+        "corrected_text": "take metformin 50 mg daily",
+        "full_ft_text": "take metformin 50 mg daily",
+        "lora_text": "take metfornin 50 mg daily",
+        "scribe_v2_text": "metfornin 15 mg daily",
+        "emergency_lora_text": "take metfornin 15 mg daily",
+        "medical_keywords": ["metformin"],
+    }
+
+    eval_path = tmp_path / "benchmark_eval.jsonl"
+    eval_path.write_text(json.dumps(eval_row) + "\n", encoding="utf-8")
+
+    out = mod._recompute(payload=payload, eval_path=eval_path)
+    model_benchmarks = out["model_benchmarks"]
+
+    by_id = {row["id"]: row for row in model_benchmarks}
+    assert {"fine_tuned_telephony", "lora", "scribe_v2", "emergency_lora"} <= set(by_id)
+    assert by_id["fine_tuned_telephony"]["avg_wer"] < by_id["lora"]["avg_wer"]
+    assert by_id["lora"]["avg_wer"] < by_id["scribe_v2"]["avg_wer"] + 1e-9
 
 
 def test_resolve_benchmark_audio_path_prefers_manifest_audio(tmp_path):

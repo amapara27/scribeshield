@@ -84,7 +84,12 @@ _xgb_scorer = _XGBoostRiskScorer()
 
 
 def _xgboost_enabled_for_provider(stt_provider_name: str | None) -> bool:
-    return stt_provider_name in {"scribe_v2", "full_ft", "lora", "fine_tuned_telephony"}
+    return settings.XGBOOST_RUNTIME_ENABLED and stt_provider_name in {
+        "scribe_v2",
+        "full_ft",
+        "lora",
+        "fine_tuned_telephony",
+    }
 
 
 def score_words(

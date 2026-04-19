@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     FINE_TUNED_STT_DEVICE: str = "auto"
     FINE_TUNED_STT_DTYPE: str = "auto"
     FINE_TUNED_STT_WORD_TIMESTAMPS: bool = False
+    XGBOOST_RUNTIME_ENABLED: bool = False
     XGBOOST_MODEL_PATH: Path = BACKEND_DIR / "xgb" / "artifacts" / "word_risk_xgb.joblib"
     XGBOOST_LOW_THRESHOLD: float = 0.60
     XGBOOST_MEDIUM_THRESHOLD: float = 0.35

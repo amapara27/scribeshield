@@ -50,12 +50,6 @@ const fmtPercent = (value: number | null | undefined, decimals = 1): string => {
   return `${pct.toFixed(decimals)}%`;
 };
 
-const fmtSignedPercent = (value: number | null | undefined, decimals = 1): string => {
-  const pct = toPercent(value);
-  if (pct === null) return "n/a";
-  return `${pct > 0 ? "+" : ""}${pct.toFixed(decimals)}%`;
-};
-
 const BenchmarkPage = () => {
   const [data, setData] = useState<BenchmarkResponse | null>(null);
   const [dataSource, setDataSource] = useState<"api" | "unavailable">("unavailable");
@@ -292,37 +286,15 @@ const BenchmarkPage = () => {
     return cards;
   }, [data]);
 
-  const comparisonRows = useMemo(() => {
-    const comparison = data?.comparison;
-    if (!comparison) return [];
+  const modelBenchmarks = useMemo(
+    () =>
+      [...(data?.model_benchmarks ?? [])].sort(
+        (a, b) => (toPercent(a.avg_wer) ?? Number.POSITIVE_INFINITY) - (toPercent(b.avg_wer) ?? Number.POSITIVE_INFINITY),
+      ),
+    [data],
+  );
 
-    return [
-      {
-        label: "Overall WER",
-        base: comparison.base_model.avg_wer,
-        fineTuned: comparison.fine_tuned_model.avg_wer,
-        delta: comparison.delta.wer_reduction,
-        deltaLabel: "WER reduction",
-        betterWhenPositive: true,
-      },
-      {
-        label: "Digit Accuracy",
-        base: comparison.base_model.avg_digit_accuracy,
-        fineTuned: comparison.fine_tuned_model.avg_digit_accuracy,
-        delta: comparison.delta.digit_accuracy_gain,
-        deltaLabel: "accuracy gain",
-        betterWhenPositive: true,
-      },
-      {
-        label: "Medical Keyword Accuracy",
-        base: comparison.base_model.avg_medical_keyword_accuracy,
-        fineTuned: comparison.fine_tuned_model.avg_medical_keyword_accuracy,
-        delta: comparison.delta.medical_keyword_accuracy_gain,
-        deltaLabel: "accuracy gain",
-        betterWhenPositive: true,
-      },
-    ];
-  }, [data]);
+  const bestModel = modelBenchmarks[0] ?? null;
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -356,9 +328,7 @@ const BenchmarkPage = () => {
               {fmtPercent(data.aggregate.avg_improvement_pct)} average correction lift.
               Verification rate {fmtPercent(data.metrics.verification_rate)}, unsafe
               guess rate {fmtPercent(data.metrics.unsafe_guess_rate)}.
-              {data.comparison
-                ? ` Fine-tuned telephony trims WER by ${fmtPercent(data.comparison.delta.wer_reduction)} versus base whisper-small.`
-                : ""}
+              {bestModel ? ` Best STT WER: ${bestModel.label} at ${fmtPercent(bestModel.avg_wer)}.` : ""}
             </p>
           ) : (
             <p className="text-sm text-muted-foreground mt-2">
@@ -394,56 +364,46 @@ const BenchmarkPage = () => {
           <div className="mb-12">
             <div className="flex items-end justify-between gap-4 mb-4">
               <div>
-                <h2 className="text-2xl font-bold">Model Comparison</h2>
+                <h2 className="text-2xl font-bold">Model Benchmarks</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Side-by-side benchmark averages for `openai/whisper-small` versus the local `fine_tuned_telephony` model.
+                  Real benchmark averages for all local demo providers, including emergency fallback.
                 </p>
               </div>
-              {data.comparison && (
+              {bestModel && (
                 <div className="rounded-lg border border-success/30 bg-success/10 px-4 py-3 text-right">
-                  <div className="text-xs uppercase tracking-[0.2em] text-success">Model Comparison</div>
+                  <div className="text-xs uppercase tracking-[0.2em] text-success">Best WER</div>
                   <div className="text-lg font-semibold text-foreground">
-                    {fmtPercent(data.comparison.delta.wer_reduction)} WER reduction
+                    {bestModel.label}: {fmtPercent(bestModel.avg_wer)}
                   </div>
                 </div>
               )}
             </div>
 
-            {data.comparison ? (
+            {modelBenchmarks.length > 0 ? (
               <div className="overflow-x-auto rounded-lg border shadow-card">
                 <table className="w-full text-sm">
                   <thead className="bg-primary text-primary-foreground">
                     <tr>
-                      <th className="px-4 py-3 text-left">Metric</th>
-                      <th className="px-4 py-3 text-left">
-                        {data.comparison.base_model.label}
-                      </th>
-                      <th className="px-4 py-3 text-left">
-                        {data.comparison.fine_tuned_model.label}
-                      </th>
-                      <th className="px-4 py-3 text-left">Delta</th>
+                      <th className="px-4 py-3 text-left">Model</th>
+                      <th className="px-4 py-3 text-left">Clips</th>
+                      <th className="px-4 py-3 text-left">WER</th>
+                      <th className="px-4 py-3 text-left">CER</th>
+                      <th className="px-4 py-3 text-left">Digit Accuracy</th>
+                      <th className="px-4 py-3 text-left">Medical Keyword Accuracy</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {comparisonRows.map((row, index) => (
+                    {modelBenchmarks.map((row, index) => (
                       <tr
-                        key={row.label}
+                        key={row.id}
                         className={`border-t ${index % 2 === 0 ? "" : "bg-secondary/50"}`}
                       >
                         <td className="px-4 py-3 font-medium text-foreground">{row.label}</td>
-                        <td className="px-4 py-3">{fmtPercent(row.base)}</td>
-                        <td className="px-4 py-3">{fmtPercent(row.fineTuned)}</td>
-                        <td className="px-4 py-3">
-                          <span
-                            className={
-                              (row.delta ?? 0) >= 0
-                                ? "text-success font-semibold"
-                                : "text-signal-red font-semibold"
-                            }
-                          >
-                            {fmtSignedPercent(row.delta)} {row.deltaLabel}
-                          </span>
-                        </td>
+                        <td className="px-4 py-3">{row.clip_count}</td>
+                        <td className="px-4 py-3">{fmtPercent(row.avg_wer)}</td>
+                        <td className="px-4 py-3">{fmtPercent(row.avg_cer)}</td>
+                        <td className="px-4 py-3">{fmtPercent(row.avg_digit_accuracy)}</td>
+                        <td className="px-4 py-3">{fmtPercent(row.avg_medical_keyword_accuracy)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -451,10 +411,10 @@ const BenchmarkPage = () => {
               </div>
             ) : (
               <div className="rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-warning">
-                Model comparison data has not been generated yet. Re-run
-                `backend/scripts/run_benchmark.py --run-pipeline` after the base
-                `openai/whisper-small` and local `fine_tuned_telephony` model assets
-                are available.
+                Model benchmark rows have not been generated yet. Re-run
+                `backend/scripts/run_benchmark.py --run-pipeline` after the
+                `fine_tuned_telephony`, `lora`, `scribe_v2`, and `emergency_lora`
+                providers are available.
               </div>
             )}
           </div>
