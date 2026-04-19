@@ -298,12 +298,15 @@ const DemoPage = () => {
       | { model: ClinicModelOption; success: true }
       | { model: ClinicModelOption; success: false; message: string }
     > = [];
-    // Run Scribe immediately in parallel while Whisper variants run one-by-one.
-    // This keeps the UI responsive and avoids overloading local inference runtime.
-    const scribePromise = runSingleModel("scribe_v2");
-    outcomes.push(await runSingleModel("fine_tuned_telephony"));
-    outcomes.push(await runSingleModel("lora"));
-    outcomes.push(await scribePromise);
+    // Start all Clinic models together so Fine-Tuned Whisper and LoRA
+    // can warm up side-by-side again now that the backend crash path is removed.
+    outcomes.push(
+      ...(await Promise.all([
+        runSingleModel("fine_tuned_telephony"),
+        runSingleModel("lora"),
+        runSingleModel("scribe_v2"),
+      ])),
+    );
 
     const firstSuccessfulModel = CORE_MODEL_COMPARE_ORDER.find((model) =>
       outcomes.some((outcome) => outcome.model === model && outcome.success),
