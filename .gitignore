@@ -62,3 +62,4 @@ backend/audio_gen/output
 *.csv
 
 backend/tuned_models
+backend/xgb/data/scribe_outputs/
