@@ -17,8 +17,11 @@ except Exception:  # pragma: no cover - fallback import style for alternate runn
 from .config import settings
 
 
-async def preprocess(input_path: str) -> str:
+async def preprocess(input_path: str, *, stt_provider: str | None = None) -> str:
     """Run loudnorm → afftdn → 16kHz mono PCM WAV. Return path to cleaned WAV.
+
+    For fine_tuned_telephony, uses telephony_mode=True: skips denoising and applies
+    8kHz→16kHz resampling to match the model's training distribution.
 
     Implementation notes:
         ffmpeg -y -i {input} \\
@@ -40,5 +43,6 @@ async def preprocess(input_path: str) -> str:
         timeout_s=120,
         ffmpeg_bin=ff,
         ffprobe_bin=fp,
+        telephony_mode=(stt_provider == "fine_tuned_telephony"),
     )
     return str(result.output_path)

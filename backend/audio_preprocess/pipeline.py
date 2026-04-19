@@ -28,6 +28,10 @@ TARGET_CODEC = "pcm_s16le"
 TARGET_CONTAINER = "wav"
 FILTER_CHAIN = "loudnorm=I=-16:LRA=11:TP=-1.5,afftdn=nf=-25,aresample=16000:resampler=soxr"
 FALLBACK_FILTER_CHAIN = "loudnorm=I=-16:LRA=11:TP=-1.5,afftdn=nf=-25,aresample=16000"
+# Telephony chain: skip denoising, downsample to 8kHz then back to 16kHz to recreate
+# the narrowband ceiling that fine_tuned_telephony was trained on.
+FILTER_CHAIN_TELEPHONY = "loudnorm=I=-16:LRA=11:TP=-1.5,aresample=8000,aresample=16000:resampler=soxr"
+FALLBACK_FILTER_CHAIN_TELEPHONY = "loudnorm=I=-16:LRA=11:TP=-1.5,aresample=8000,aresample=16000"
 
 
 def _windows_binary_candidates(binary_name: str) -> list[Path]:
@@ -224,8 +228,13 @@ def preprocess_for_scribe(
     timeout_s: float = 120,
     ffmpeg_bin: str | None = None,
     ffprobe_bin: str | None = None,
+    telephony_mode: bool = False,
 ) -> PreprocessResult:
-    """Run fixed preprocessing chain and emit 16kHz mono PCM WAV for Scribe."""
+    """Run fixed preprocessing chain and emit 16kHz mono PCM WAV for Scribe.
+
+    Set telephony_mode=True for fine_tuned_telephony provider: skips denoising and
+    applies 8kHz→16kHz resampling to match the model's training distribution.
+    """
 
     start_total = perf_counter()
 
@@ -247,11 +256,14 @@ def preprocess_for_scribe(
     dst_dir.mkdir(parents=True, exist_ok=True)
     output_path = _output_path_for(src, dst_dir, job_id)
 
+    active_chain = FILTER_CHAIN_TELEPHONY if telephony_mode else FILTER_CHAIN
+    fallback_active_chain = FALLBACK_FILTER_CHAIN_TELEPHONY if telephony_mode else FALLBACK_FILTER_CHAIN
+
     command = build_ffmpeg_command(
         src,
         output_path,
         ffmpeg_bin=ffmpeg_bin,
-        filter_chain=FILTER_CHAIN,
+        filter_chain=active_chain,
     )
 
     start_ffmpeg = perf_counter()
@@ -272,7 +284,7 @@ def preprocess_for_scribe(
             src,
             output_path,
             ffmpeg_bin=ffmpeg_bin,
-            filter_chain=FALLBACK_FILTER_CHAIN,
+            filter_chain=fallback_active_chain,
         )
         try:
             proc = subprocess.run(

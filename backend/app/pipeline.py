@@ -141,22 +141,25 @@ async def run_full_pipeline(
 ) -> TranscribeResponse:
     latencies: dict[str, int] = {}
 
+    # Resolve provider early so preprocessing can use the correct filter chain.
+    batch_provider = get_batch_provider(stt_provider_override)
+    stt_provider_name = getattr(batch_provider, "name", None)
+
     # ---------------- Layer 1: ffmpeg preprocessing (Person A) ----------------
     t = perf_counter()
-    cleaned_path = await preprocessing.preprocess(audio_path)
+    cleaned_path = await preprocessing.preprocess(audio_path, stt_provider=stt_provider_name)
     latencies["preprocessing"] = _ms_since(t)
 
     # ---------------- Layer 2: batch STT provider -------------------------------
     t = perf_counter()
     keyterms = learning_loop.get_keyterms(top_n=100)
-    batch_provider = get_batch_provider(stt_provider_override)
     scribe_result = await batch_provider.transcribe_batch(cleaned_path, keyterms)
     latencies["scribe"] = _ms_since(t)
 
     return await _run_post_scribe(
         scribe_result.words,
         latencies,
-        stt_provider_name=getattr(batch_provider, "name", None),
+        stt_provider_name=stt_provider_name,
     )
 
 
