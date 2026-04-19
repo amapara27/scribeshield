@@ -1,0 +1,215 @@
+{
+  "clip_id": "scribe_v2__clip_16",
+  "words": [
+    {
+      "text": "The",
+      "start_ms": 99,
+      "end_ms": 119,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "last",
+      "start_ms": 139,
+      "end_ms": 239,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "time",
+      "start_ms": 259,
+      "end_ms": 340,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 359,
+      "end_ms": 399,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "took",
+      "start_ms": 419,
+      "end_ms": 519,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "ibuprofen,",
+      "start_ms": 539,
+      "end_ms": 899,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 1039,
+      "end_ms": 1059,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "noticed",
+      "start_ms": 1100,
+      "end_ms": 1360,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "swelling",
+      "start_ms": 1379,
+      "end_ms": 1599,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "in",
+      "start_ms": 1599,
+      "end_ms": 1659,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "my",
+      "start_ms": 1679,
+      "end_ms": 1799,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "face",
+      "start_ms": 1819,
+      "end_ms": 1939,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "and",
+      "start_ms": 1959,
+      "end_ms": 2039,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "hands",
+      "start_ms": 2059,
+      "end_ms": 2259,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "afterward,",
+      "start_ms": 2299,
+      "end_ms": 2559,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "maybe",
+      "start_ms": 2779,
+      "end_ms": 2939,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "within",
+      "start_ms": 2939,
+      "end_ms": 3179,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "six",
+      "start_ms": 3199,
+      "end_ms": 3339,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "or",
+      "start_ms": 3379,
+      "end_ms": 3460,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "sixteen",
+      "start_ms": 3480,
+      "end_ms": 3699,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "hours.",
+      "start_ms": 3740,
+      "end_ms": 4078,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "So",
+      "start_ms": 4119,
+      "end_ms": 4159,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I'm",
+      "start_ms": 4199,
+      "end_ms": 4239,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "wondering",
+      "start_ms": 4279,
+      "end_ms": 4460,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "if",
+      "start_ms": 4480,
+      "end_ms": 4559,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "that",
+      "start_ms": 4559,
+      "end_ms": 4659,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "was",
+      "start_ms": 4679,
+      "end_ms": 4759,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "an",
+      "start_ms": 4759,
+      "end_ms": 4799,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "allergic",
+      "start_ms": 4859,
+      "end_ms": 5039,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "reaction",
+      "start_ms": 5079,
+      "end_ms": 5379,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    }
+  ]
+}

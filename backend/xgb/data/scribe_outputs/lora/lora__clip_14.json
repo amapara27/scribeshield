@@ -1,0 +1,194 @@
+{
+  "clip_id": "lora__clip_14",
+  "words": [
+    {
+      "text": "I",
+      "start_ms": 0,
+      "end_ms": 301,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "think",
+      "start_ms": 321,
+      "end_ms": 622,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 642,
+      "end_ms": 943,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "had",
+      "start_ms": 963,
+      "end_ms": 1264,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "a",
+      "start_ms": 1284,
+      "end_ms": 1585,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "reaction",
+      "start_ms": 1605,
+      "end_ms": 1906,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "to",
+      "start_ms": 1926,
+      "end_ms": 2227,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "amoxicillin,",
+      "start_ms": 2247,
+      "end_ms": 2548,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "or",
+      "start_ms": 2568,
+      "end_ms": 2869,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "maybe",
+      "start_ms": 2889,
+      "end_ms": 3190,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "amlodipine,",
+      "start_ms": 3210,
+      "end_ms": 3511,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 3531,
+      "end_ms": 3832,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "might",
+      "start_ms": 3852,
+      "end_ms": 4153,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "be",
+      "start_ms": 4173,
+      "end_ms": 4474,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "confusing",
+      "start_ms": 4494,
+      "end_ms": 4795,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "the",
+      "start_ms": 4815,
+      "end_ms": 5116,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "names,",
+      "start_ms": 5136,
+      "end_ms": 5437,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "but",
+      "start_ms": 5457,
+      "end_ms": 5758,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 5778,
+      "end_ms": 6079,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "broke",
+      "start_ms": 6099,
+      "end_ms": 6400,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "out",
+      "start_ms": 6420,
+      "end_ms": 6721,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "in",
+      "start_ms": 6741,
+      "end_ms": 7042,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "hives",
+      "start_ms": 7062,
+      "end_ms": 7363,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "a",
+      "start_ms": 7383,
+      "end_ms": 7684,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "few",
+      "start_ms": 7704,
+      "end_ms": 8005,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "years",
+      "start_ms": 8025,
+      "end_ms": 8326,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "ago.",
+      "start_ms": 8346,
+      "end_ms": 8647,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    }
+  ]
+}

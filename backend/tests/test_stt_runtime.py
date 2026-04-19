@@ -73,7 +73,7 @@ def test_get_batch_provider_auto_falls_back_to_scribe(monkeypatch: pytest.Monkey
 def test_get_batch_provider_explicit_local_raises_when_missing(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    monkeypatch.setattr(runtime.settings, "STT_PROVIDER", "fine_tuned_telephony")
+    monkeypatch.setattr(runtime.settings, "STT_PROVIDER", "full_ft")
     monkeypatch.setattr(runtime.settings, "FINE_TUNED_STT_MODEL_PATH", tmp_path / "missing")
     runtime.reset_runtime_cache()
 
@@ -139,7 +139,7 @@ def test_torch_dtype_auto_prefers_float16_for_mps(monkeypatch: pytest.MonkeyPatc
 
 
 def test_get_batch_provider_auto_uses_legacy_drop_in_path(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    legacy = tmp_path / "whisper_small_telephony_final"
+    legacy = tmp_path / "full_ft"
     for name in (
         "config.json",
         "preprocessor_config.json",
@@ -149,7 +149,7 @@ def test_get_batch_provider_auto_uses_legacy_drop_in_path(monkeypatch: pytest.Mo
     ):
         _touch(legacy / name)
 
-    monkeypatch.setattr(runtime, "DEFAULT_MODEL_PATH", (tmp_path / "stt" / "models" / "fine_tuned_telephony").resolve())
+    monkeypatch.setattr(runtime, "DEFAULT_MODEL_PATH", (tmp_path / "stt" / "models" / "full_ft").resolve())
     monkeypatch.setattr(runtime, "LEGACY_MODEL_PATH", legacy.resolve())
     monkeypatch.setattr(runtime.settings, "STT_PROVIDER", "auto")
     monkeypatch.setattr(
@@ -161,6 +161,6 @@ def test_get_batch_provider_auto_uses_legacy_drop_in_path(monkeypatch: pytest.Mo
 
     provider = runtime.get_batch_provider()
 
-    assert provider.name == "fine_tuned_telephony"
+    assert provider.name == "full_ft"
     assert isinstance(provider, runtime.FineTunedTelephonyBatchProvider)
     assert provider._model_path == legacy.resolve()

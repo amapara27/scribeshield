@@ -1,0 +1,215 @@
+{
+  "clip_id": "scribe_v2__clip_19",
+  "words": [
+    {
+      "text": "Is",
+      "start_ms": 59,
+      "end_ms": 99,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "it",
+      "start_ms": 119,
+      "end_ms": 159,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "okay",
+      "start_ms": 239,
+      "end_ms": 439,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "if",
+      "start_ms": 479,
+      "end_ms": 539,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 559,
+      "end_ms": 579,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "take",
+      "start_ms": 620,
+      "end_ms": 779,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "two",
+      "start_ms": 779,
+      "end_ms": 899,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "tablets",
+      "start_ms": 919,
+      "end_ms": 1120,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "of",
+      "start_ms": 1120,
+      "end_ms": 1179,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "ibuprofen",
+      "start_ms": 1199,
+      "end_ms": 1519,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "at",
+      "start_ms": 1539,
+      "end_ms": 1619,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "once",
+      "start_ms": 1659,
+      "end_ms": 1919,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "when",
+      "start_ms": 1959,
+      "end_ms": 2039,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "the",
+      "start_ms": 2039,
+      "end_ms": 2079,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "pain",
+      "start_ms": 2099,
+      "end_ms": 2220,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "gets",
+      "start_ms": 2279,
+      "end_ms": 2399,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "really",
+      "start_ms": 2399,
+      "end_ms": 2539,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "bad?",
+      "start_ms": 2619,
+      "end_ms": 2740,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "Or",
+      "start_ms": 3000,
+      "end_ms": 3079,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "should",
+      "start_ms": 3099,
+      "end_ms": 3179,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 3259,
+      "end_ms": 3279,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "stick",
+      "start_ms": 3299,
+      "end_ms": 3419,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "to",
+      "start_ms": 3419,
+      "end_ms": 3500,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "one,",
+      "start_ms": 3579,
+      "end_ms": 3699,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "like",
+      "start_ms": 3919,
+      "end_ms": 4000,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "every",
+      "start_ms": 4038,
+      "end_ms": 4219,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "five",
+      "start_ms": 4239,
+      "end_ms": 4359,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "or",
+      "start_ms": 4400,
+      "end_ms": 4500,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "nine",
+      "start_ms": 4500,
+      "end_ms": 4639,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "hours?",
+      "start_ms": 4659,
+      "end_ms": 4859,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    }
+  ]
+}

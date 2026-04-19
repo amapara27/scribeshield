@@ -1,0 +1,194 @@
+{
+  "clip_id": "scribe_v2__clip_15",
+  "words": [
+    {
+      "text": "I",
+      "start_ms": 79,
+      "end_ms": 99,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "might",
+      "start_ms": 119,
+      "end_ms": 199,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "be",
+      "start_ms": 199,
+      "end_ms": 239,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "allergic",
+      "start_ms": 259,
+      "end_ms": 459,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "to",
+      "start_ms": 479,
+      "end_ms": 519,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "sulfur",
+      "start_ms": 560,
+      "end_ms": 699,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "drugs",
+      "start_ms": 719,
+      "end_ms": 959,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "because",
+      "start_ms": 979,
+      "end_ms": 1120,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 1120,
+      "end_ms": 1139,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "remember",
+      "start_ms": 1159,
+      "end_ms": 1339,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "feeling",
+      "start_ms": 1360,
+      "end_ms": 1500,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "really",
+      "start_ms": 1519,
+      "end_ms": 1679,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "sick",
+      "start_ms": 1699,
+      "end_ms": 1799,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "and",
+      "start_ms": 1819,
+      "end_ms": 1879,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "getting",
+      "start_ms": 1899,
+      "end_ms": 2000,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "a",
+      "start_ms": 2019,
+      "end_ms": 2059,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "rash,",
+      "start_ms": 2079,
+      "end_ms": 2259,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "maybe",
+      "start_ms": 2519,
+      "end_ms": 2619,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "after",
+      "start_ms": 2619,
+      "end_ms": 2779,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "fifteen",
+      "start_ms": 2779,
+      "end_ms": 2960,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "or",
+      "start_ms": 2980,
+      "end_ms": 3039,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "fifty",
+      "start_ms": 3059,
+      "end_ms": 3179,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "minutes.",
+      "start_ms": 3199,
+      "end_ms": 3439,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 3460,
+      "end_ms": 3480,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "don't",
+      "start_ms": 3500,
+      "end_ms": 3579,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "remember",
+      "start_ms": 3619,
+      "end_ms": 3779,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "exactly",
+      "start_ms": 3819,
+      "end_ms": 4078,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    }
+  ]
+}

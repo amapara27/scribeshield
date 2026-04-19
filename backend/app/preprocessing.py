@@ -20,7 +20,7 @@ from .config import settings
 async def preprocess(input_path: str, *, stt_provider: str | None = None) -> str:
     """Run loudnorm → afftdn → 16kHz mono PCM WAV. Return path to cleaned WAV.
 
-    For fine_tuned_telephony, uses telephony_mode=True: skips denoising and applies
+    For full_ft, uses telephony_mode=True: skips denoising and applies
     8kHz→16kHz resampling to match the model's training distribution.
 
     Implementation notes:
@@ -43,6 +43,6 @@ async def preprocess(input_path: str, *, stt_provider: str | None = None) -> str
         timeout_s=120,
         ffmpeg_bin=ff,
         ffprobe_bin=fp,
-        telephony_mode=(stt_provider == "fine_tuned_telephony"),
+        telephony_mode=(stt_provider == "full_ft"),
     )
     return str(result.output_path)

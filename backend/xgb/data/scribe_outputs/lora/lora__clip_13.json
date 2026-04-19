@@ -1,0 +1,236 @@
+{
+  "clip_id": "lora__clip_13",
+  "words": [
+    {
+      "text": "I",
+      "start_ms": 0,
+      "end_ms": 282,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "just",
+      "start_ms": 302,
+      "end_ms": 584,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "wanted",
+      "start_ms": 604,
+      "end_ms": 886,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "to",
+      "start_ms": 906,
+      "end_ms": 1188,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "let",
+      "start_ms": 1208,
+      "end_ms": 1490,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "you",
+      "start_ms": 1510,
+      "end_ms": 1792,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "know",
+      "start_ms": 1812,
+      "end_ms": 2094,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "that",
+      "start_ms": 2114,
+      "end_ms": 2396,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I\u2019m",
+      "start_ms": 2416,
+      "end_ms": 2698,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "allergic",
+      "start_ms": 2718,
+      "end_ms": 3000,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "to",
+      "start_ms": 3020,
+      "end_ms": 3302,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "penicillin,",
+      "start_ms": 3322,
+      "end_ms": 3604,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "because",
+      "start_ms": 3624,
+      "end_ms": 3906,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "the",
+      "start_ms": 3926,
+      "end_ms": 4208,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "last",
+      "start_ms": 4228,
+      "end_ms": 4510,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "time",
+      "start_ms": 4530,
+      "end_ms": 4812,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 4832,
+      "end_ms": 5114,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "took",
+      "start_ms": 5134,
+      "end_ms": 5416,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "it,",
+      "start_ms": 5436,
+      "end_ms": 5718,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 5738,
+      "end_ms": 6020,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "developed",
+      "start_ms": 6040,
+      "end_ms": 6322,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "a",
+      "start_ms": 6342,
+      "end_ms": 6624,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "rash",
+      "start_ms": 6644,
+      "end_ms": 6926,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "and",
+      "start_ms": 6946,
+      "end_ms": 7228,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "some",
+      "start_ms": 7248,
+      "end_ms": 7530,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "swelling,",
+      "start_ms": 7550,
+      "end_ms": 7832,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "maybe",
+      "start_ms": 7852,
+      "end_ms": 8134,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "after",
+      "start_ms": 8154,
+      "end_ms": 8436,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "like",
+      "start_ms": 8456,
+      "end_ms": 8738,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "5",
+      "start_ms": 8758,
+      "end_ms": 9040,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "or",
+      "start_ms": 9060,
+      "end_ms": 9342,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "9",
+      "start_ms": 9362,
+      "end_ms": 9644,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "hours.",
+      "start_ms": 9664,
+      "end_ms": 9946,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    }
+  ]
+}

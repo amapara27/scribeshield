@@ -159,18 +159,17 @@ Integration tests auto-skip if `ffmpeg`/`ffprobe` are unavailable.
 
 Batch `/transcribe` can use a locally fine-tuned Whisper model when it is placed at:
 
-`backend/stt/models/fine_tuned_telephony/`
+`backend/tuned_models/full_ft/`
 
 Use a direct Hugging Face `save_pretrained()` export from Colab.
 
-For convenience, `STT_PROVIDER=auto` also recognizes the current backend-root drop-in
-location:
+For convenience, `STT_PROVIDER=auto` also recognizes the legacy drop-in location:
 
-`backend/whisper_small_telephony_final/`
+`backend/stt/models/full_ft/`
 
 Relevant env vars:
 
-- `STT_PROVIDER=auto|scribe_v2|fine_tuned_telephony`
+- `STT_PROVIDER=auto|scribe_v2|full_ft`
 - `FINE_TUNED_STT_MODEL_PATH` (optional override)
 - `FINE_TUNED_STT_LANGUAGE=english`
 - `FINE_TUNED_STT_TASK=transcribe`
@@ -181,7 +180,7 @@ Relevant env vars:
 Default behavior:
 
 - `auto`: use the local Whisper model if present and valid, otherwise fall back to Scribe v2
-- `fine_tuned_telephony`: require the local model at startup
+- `full_ft`: require the local model at startup
 - `scribe_v2`: ignore the local model and force ElevenLabs
 
 Realtime websocket transcription remains on Scribe v2 for now.

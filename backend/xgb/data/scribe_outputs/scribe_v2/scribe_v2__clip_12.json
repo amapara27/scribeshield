@@ -1,0 +1,215 @@
+{
+  "clip_id": "scribe_v2__clip_12",
+  "words": [
+    {
+      "text": "I've",
+      "start_ms": 0,
+      "end_ms": 39,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "been",
+      "start_ms": 39,
+      "end_ms": 79,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "feeling",
+      "start_ms": 199,
+      "end_ms": 319,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "nauseous",
+      "start_ms": 340,
+      "end_ms": 599,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "and",
+      "start_ms": 599,
+      "end_ms": 679,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "really",
+      "start_ms": 699,
+      "end_ms": 759,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "fatigued",
+      "start_ms": 819,
+      "end_ms": 2039,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "ever",
+      "start_ms": 2039,
+      "end_ms": 2039,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "since",
+      "start_ms": 2039,
+      "end_ms": 2039,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 2039,
+      "end_ms": 2039,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "started",
+      "start_ms": 2039,
+      "end_ms": 2039,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "taking",
+      "start_ms": 2039,
+      "end_ms": 2220,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "antibiotics,",
+      "start_ms": 2220,
+      "end_ms": 2220,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "maybe",
+      "start_ms": 2240,
+      "end_ms": 2359,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "amoxicillin",
+      "start_ms": 2419,
+      "end_ms": 2839,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "or",
+      "start_ms": 2859,
+      "end_ms": 2899,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "something",
+      "start_ms": 2919,
+      "end_ms": 3219,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "similar,",
+      "start_ms": 3219,
+      "end_ms": 3459,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "and",
+      "start_ms": 3500,
+      "end_ms": 3619,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "it's",
+      "start_ms": 3819,
+      "end_ms": 3839,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "been",
+      "start_ms": 3839,
+      "end_ms": 3839,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "about",
+      "start_ms": 3899,
+      "end_ms": 4019,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "thirteen",
+      "start_ms": 4059,
+      "end_ms": 4078,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "or",
+      "start_ms": 4078,
+      "end_ms": 4078,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "thirty",
+      "start_ms": 4078,
+      "end_ms": 4078,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "hours",
+      "start_ms": 4078,
+      "end_ms": 4078,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "since",
+      "start_ms": 4078,
+      "end_ms": 4599,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "the",
+      "start_ms": 4639,
+      "end_ms": 4879,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "symptoms",
+      "start_ms": 4880,
+      "end_ms": 4900,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "started",
+      "start_ms": 4900,
+      "end_ms": 5099,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    }
+  ]
+}

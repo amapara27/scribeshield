@@ -29,7 +29,7 @@ TARGET_CONTAINER = "wav"
 FILTER_CHAIN = "loudnorm=I=-16:LRA=11:TP=-1.5,afftdn=nf=-25,aresample=16000:resampler=soxr"
 FALLBACK_FILTER_CHAIN = "loudnorm=I=-16:LRA=11:TP=-1.5,afftdn=nf=-25,aresample=16000"
 # Telephony chain: skip denoising, downsample to 8kHz then back to 16kHz to recreate
-# the narrowband ceiling that fine_tuned_telephony was trained on.
+# the narrowband ceiling that full_ft was trained on.
 FILTER_CHAIN_TELEPHONY = "loudnorm=I=-16:LRA=11:TP=-1.5,aresample=8000,aresample=16000:resampler=soxr"
 FALLBACK_FILTER_CHAIN_TELEPHONY = "loudnorm=I=-16:LRA=11:TP=-1.5,aresample=8000,aresample=16000"
 
@@ -232,7 +232,7 @@ def preprocess_for_scribe(
 ) -> PreprocessResult:
     """Run fixed preprocessing chain and emit 16kHz mono PCM WAV for Scribe.
 
-    Set telephony_mode=True for fine_tuned_telephony provider: skips denoising and
+    Set telephony_mode=True for full_ft provider: skips denoising and
     applies 8kHz→16kHz resampling to match the model's training distribution.
     """
 

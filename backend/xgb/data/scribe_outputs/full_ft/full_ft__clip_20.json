@@ -1,0 +1,222 @@
+{
+  "clip_id": "full_ft__clip_20",
+  "words": [
+    {
+      "text": "I",
+      "start_ms": 0,
+      "end_ms": 283,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "was",
+      "start_ms": 303,
+      "end_ms": 586,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "prescribed",
+      "start_ms": 606,
+      "end_ms": 889,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "prednisone",
+      "start_ms": 909,
+      "end_ms": 1192,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "for",
+      "start_ms": 1212,
+      "end_ms": 1495,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "inflammation,",
+      "start_ms": 1515,
+      "end_ms": 1798,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "but",
+      "start_ms": 1818,
+      "end_ms": 2101,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I\u2019m",
+      "start_ms": 2121,
+      "end_ms": 2404,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "not",
+      "start_ms": 2424,
+      "end_ms": 2707,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "sure",
+      "start_ms": 2727,
+      "end_ms": 3010,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "how",
+      "start_ms": 3030,
+      "end_ms": 3313,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "often",
+      "start_ms": 3333,
+      "end_ms": 3616,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 3636,
+      "end_ms": 3919,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "should",
+      "start_ms": 3939,
+      "end_ms": 4222,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "take",
+      "start_ms": 4242,
+      "end_ms": 4525,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "it,",
+      "start_ms": 4545,
+      "end_ms": 4828,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "like",
+      "start_ms": 4848,
+      "end_ms": 5131,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "maybe",
+      "start_ms": 5151,
+      "end_ms": 5434,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "every",
+      "start_ms": 5454,
+      "end_ms": 5737,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "12",
+      "start_ms": 5757,
+      "end_ms": 6040,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "or",
+      "start_ms": 6060,
+      "end_ms": 6343,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "20",
+      "start_ms": 6363,
+      "end_ms": 6646,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "hours,",
+      "start_ms": 6666,
+      "end_ms": 6949,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "or",
+      "start_ms": 6969,
+      "end_ms": 7252,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "if",
+      "start_ms": 7272,
+      "end_ms": 7555,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 7575,
+      "end_ms": 7858,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "need",
+      "start_ms": 7878,
+      "end_ms": 8161,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "to",
+      "start_ms": 8181,
+      "end_ms": 8464,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "taper",
+      "start_ms": 8484,
+      "end_ms": 8767,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "the",
+      "start_ms": 8787,
+      "end_ms": 9070,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "dose.",
+      "start_ms": 9090,
+      "end_ms": 9373,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    }
+  ]
+}

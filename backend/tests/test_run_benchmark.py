@@ -111,7 +111,7 @@ def test_recompute_builds_model_comparison_when_eval_rows_include_both_models(tm
         "raw_text": "take metfornin 15 mg daily",
         "corrected_text": "take metformin 50 mg daily",
         "base_whisper_small_text": "take metfornin 15 mg daily",
-        "fine_tuned_telephony_text": "take metformin 50 mg daily",
+        "full_ft_text": "take metformin 50 mg daily",
         "medical_keywords": ["metformin"],
     }
 

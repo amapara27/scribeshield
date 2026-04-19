@@ -1,0 +1,222 @@
+{
+  "clip_id": "full_ft__clip_10",
+  "words": [
+    {
+      "text": "I\u2019ve",
+      "start_ms": 0,
+      "end_ms": 319,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "been",
+      "start_ms": 339,
+      "end_ms": 658,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "feeling",
+      "start_ms": 678,
+      "end_ms": 997,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "dizzy",
+      "start_ms": 1017,
+      "end_ms": 1336,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "after",
+      "start_ms": 1356,
+      "end_ms": 1675,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "taking",
+      "start_ms": 1695,
+      "end_ms": 2014,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "my",
+      "start_ms": 2034,
+      "end_ms": 2353,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "blood",
+      "start_ms": 2373,
+      "end_ms": 2692,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "pressure",
+      "start_ms": 2712,
+      "end_ms": 3031,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "medication",
+      "start_ms": 3051,
+      "end_ms": 3370,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "in",
+      "start_ms": 3390,
+      "end_ms": 3709,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "the",
+      "start_ms": 3729,
+      "end_ms": 4048,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "morning,",
+      "start_ms": 4068,
+      "end_ms": 4387,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "and",
+      "start_ms": 4407,
+      "end_ms": 4726,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "sometimes",
+      "start_ms": 4746,
+      "end_ms": 5065,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 5085,
+      "end_ms": 5404,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "feel",
+      "start_ms": 5424,
+      "end_ms": 5743,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "like",
+      "start_ms": 5763,
+      "end_ms": 6082,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 6102,
+      "end_ms": 6421,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "might",
+      "start_ms": 6441,
+      "end_ms": 6760,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "faint,",
+      "start_ms": 6780,
+      "end_ms": 7099,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "especially",
+      "start_ms": 7119,
+      "end_ms": 7438,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "if",
+      "start_ms": 7458,
+      "end_ms": 7777,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 7797,
+      "end_ms": 8116,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "take",
+      "start_ms": 8136,
+      "end_ms": 8455,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "like",
+      "start_ms": 8475,
+      "end_ms": 8794,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "10",
+      "start_ms": 8814,
+      "end_ms": 9133,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "or",
+      "start_ms": 9153,
+      "end_ms": 9472,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "maybe",
+      "start_ms": 9492,
+      "end_ms": 9811,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "20",
+      "start_ms": 9831,
+      "end_ms": 10150,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "milligrams.",
+      "start_ms": 10170,
+      "end_ms": 10489,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    }
+  ]
+}

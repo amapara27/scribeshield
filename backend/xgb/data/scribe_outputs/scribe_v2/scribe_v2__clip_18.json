@@ -1,0 +1,215 @@
+{
+  "clip_id": "scribe_v2__clip_18",
+  "words": [
+    {
+      "text": "Right",
+      "start_ms": 79,
+      "end_ms": 159,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "now",
+      "start_ms": 179,
+      "end_ms": 340,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I'm",
+      "start_ms": 360,
+      "end_ms": 400,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "taking",
+      "start_ms": 439,
+      "end_ms": 599,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "Atenolol",
+      "start_ms": 620,
+      "end_ms": 819,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "ten",
+      "start_ms": 839,
+      "end_ms": 859,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "milligrams,",
+      "start_ms": 1179,
+      "end_ms": 1459,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "but",
+      "start_ms": 1659,
+      "end_ms": 1719,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "my",
+      "start_ms": 1740,
+      "end_ms": 1839,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "blood",
+      "start_ms": 1839,
+      "end_ms": 1919,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "pressure",
+      "start_ms": 1939,
+      "end_ms": 2119,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "is",
+      "start_ms": 2139,
+      "end_ms": 2180,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "still",
+      "start_ms": 2200,
+      "end_ms": 2319,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "high,",
+      "start_ms": 2319,
+      "end_ms": 2500,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "so",
+      "start_ms": 2659,
+      "end_ms": 2740,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 2759,
+      "end_ms": 2819,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "was",
+      "start_ms": 2879,
+      "end_ms": 2899,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "wondering",
+      "start_ms": 2899,
+      "end_ms": 3000,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "if",
+      "start_ms": 3000,
+      "end_ms": 3039,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 3039,
+      "end_ms": 3039,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "can",
+      "start_ms": 3199,
+      "end_ms": 3319,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "increase",
+      "start_ms": 3319,
+      "end_ms": 3480,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "it",
+      "start_ms": 3500,
+      "end_ms": 3539,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "to",
+      "start_ms": 3559,
+      "end_ms": 3619,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "twenty",
+      "start_ms": 3639,
+      "end_ms": 3899,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "or",
+      "start_ms": 3919,
+      "end_ms": 4000,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "maybe",
+      "start_ms": 4059,
+      "end_ms": 4259,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "thirty",
+      "start_ms": 4400,
+      "end_ms": 4839,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "milligrams",
+      "start_ms": 4839,
+      "end_ms": 4839,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "safely?",
+      "start_ms": 4920,
+      "end_ms": 5179,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    }
+  ]
+}

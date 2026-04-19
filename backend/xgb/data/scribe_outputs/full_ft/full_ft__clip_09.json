@@ -1,0 +1,250 @@
+{
+  "clip_id": "full_ft__clip_09",
+  "words": [
+    {
+      "text": "Over",
+      "start_ms": 0,
+      "end_ms": 395,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "the",
+      "start_ms": 415,
+      "end_ms": 810,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "past",
+      "start_ms": 830,
+      "end_ms": 1225,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "few",
+      "start_ms": 1245,
+      "end_ms": 1640,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "days,",
+      "start_ms": 1660,
+      "end_ms": 2055,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I\u2019ve",
+      "start_ms": 2075,
+      "end_ms": 2470,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "been",
+      "start_ms": 2490,
+      "end_ms": 2885,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "feeling",
+      "start_ms": 2905,
+      "end_ms": 3300,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "shortness",
+      "start_ms": 3320,
+      "end_ms": 3715,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "of",
+      "start_ms": 3735,
+      "end_ms": 4130,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "breath",
+      "start_ms": 4150,
+      "end_ms": 4545,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "and",
+      "start_ms": 4565,
+      "end_ms": 4960,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "some",
+      "start_ms": 4980,
+      "end_ms": 5375,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "tightness",
+      "start_ms": 5395,
+      "end_ms": 5790,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "in",
+      "start_ms": 5810,
+      "end_ms": 6205,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "my",
+      "start_ms": 6225,
+      "end_ms": 6620,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "chest,",
+      "start_ms": 6640,
+      "end_ms": 7035,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "especially",
+      "start_ms": 7055,
+      "end_ms": 7450,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "when",
+      "start_ms": 7470,
+      "end_ms": 7865,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 7885,
+      "end_ms": 8280,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "walk,",
+      "start_ms": 8300,
+      "end_ms": 8695,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "and",
+      "start_ms": 8715,
+      "end_ms": 9110,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I\u2019m",
+      "start_ms": 9130,
+      "end_ms": 9525,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "also",
+      "start_ms": 9545,
+      "end_ms": 9940,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "on",
+      "start_ms": 9960,
+      "end_ms": 10355,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "metformin",
+      "start_ms": 10375,
+      "end_ms": 10770,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "or",
+      "start_ms": 10790,
+      "end_ms": 11185,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "maybe",
+      "start_ms": 11205,
+      "end_ms": 11600,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "methotrexate,",
+      "start_ms": 11620,
+      "end_ms": 12015,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 12035,
+      "end_ms": 12430,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "might",
+      "start_ms": 12450,
+      "end_ms": 12845,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "be",
+      "start_ms": 12865,
+      "end_ms": 13260,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "mixing",
+      "start_ms": 13280,
+      "end_ms": 13675,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "that",
+      "start_ms": 13695,
+      "end_ms": 14090,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "up.",
+      "start_ms": 14110,
+      "end_ms": 14505,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    }
+  ]
+}

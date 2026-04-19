@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     SCRIBE_REALTIME_MODEL_ID: str = "scribe_v2_realtime"
     SCRIBE_REALTIME_WS_URL: str = "wss://api.elevenlabs.io/v1/speech-to-text/realtime"
     STT_PROVIDER: str = "auto"
-    FINE_TUNED_STT_MODEL_PATH: Path = BACKEND_DIR / "stt" / "models" / "fine_tuned_telephony"
+    FINE_TUNED_STT_MODEL_PATH: Path = BACKEND_DIR / "tuned_models" / "full_ft"
     FINE_TUNED_STT_LANGUAGE: str = "english"
     FINE_TUNED_STT_TASK: str = "transcribe"
     FINE_TUNED_STT_DEVICE: str = "auto"

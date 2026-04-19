@@ -1,0 +1,222 @@
+{
+  "clip_id": "scribe_v2__clip_06",
+  "words": [
+    {
+      "text": "After",
+      "start_ms": 59,
+      "end_ms": 180,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "the",
+      "start_ms": 180,
+      "end_ms": 239,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "procedure,",
+      "start_ms": 259,
+      "end_ms": 539,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 579,
+      "end_ms": 620,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "was",
+      "start_ms": 639,
+      "end_ms": 719,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "prescribed",
+      "start_ms": 740,
+      "end_ms": 1059,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "hydrocodone",
+      "start_ms": 1079,
+      "end_ms": 1740,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "or",
+      "start_ms": 1799,
+      "end_ms": 1899,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "maybe",
+      "start_ms": 1919,
+      "end_ms": 2079,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "hydroxyzine,",
+      "start_ms": 2159,
+      "end_ms": 2679,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I'm",
+      "start_ms": 2740,
+      "end_ms": 2799,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "not",
+      "start_ms": 2819,
+      "end_ms": 2919,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "totally",
+      "start_ms": 3000,
+      "end_ms": 3220,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "sure",
+      "start_ms": 3240,
+      "end_ms": 3399,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "which",
+      "start_ms": 3399,
+      "end_ms": 3519,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "one,",
+      "start_ms": 3559,
+      "end_ms": 3679,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "for",
+      "start_ms": 3919,
+      "end_ms": 3980,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "pain,",
+      "start_ms": 4000,
+      "end_ms": 4219,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "and",
+      "start_ms": 4259,
+      "end_ms": 4319,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "it",
+      "start_ms": 4400,
+      "end_ms": 4420,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "helps,",
+      "start_ms": 4440,
+      "end_ms": 4639,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "but",
+      "start_ms": 4960,
+      "end_ms": 5019,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 5039,
+      "end_ms": 5079,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "feel",
+      "start_ms": 5119,
+      "end_ms": 5239,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "very",
+      "start_ms": 5239,
+      "end_ms": 5400,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "tired",
+      "start_ms": 5400,
+      "end_ms": 5619,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "and",
+      "start_ms": 5659,
+      "end_ms": 5739,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "a",
+      "start_ms": 5739,
+      "end_ms": 5779,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "bit",
+      "start_ms": 5819,
+      "end_ms": 5900,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "confused",
+      "start_ms": 5920,
+      "end_ms": 6239,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "sometimes",
+      "start_ms": 6259,
+      "end_ms": 6619,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    }
+  ]
+}

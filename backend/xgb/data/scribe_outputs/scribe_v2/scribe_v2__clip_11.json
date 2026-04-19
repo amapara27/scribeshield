@@ -1,0 +1,187 @@
+{
+  "clip_id": "scribe_v2__clip_11",
+  "words": [
+    {
+      "text": "I",
+      "start_ms": 79,
+      "end_ms": 99,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "started",
+      "start_ms": 119,
+      "end_ms": 259,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "having",
+      "start_ms": 280,
+      "end_ms": 399,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "headaches",
+      "start_ms": 419,
+      "end_ms": 620,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "after",
+      "start_ms": 680,
+      "end_ms": 779,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 799,
+      "end_ms": 819,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "began",
+      "start_ms": 839,
+      "end_ms": 979,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "taking",
+      "start_ms": 1000,
+      "end_ms": 1179,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "prednisone,",
+      "start_ms": 1199,
+      "end_ms": 1539,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "or",
+      "start_ms": 1759,
+      "end_ms": 1879,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "maybe",
+      "start_ms": 1899,
+      "end_ms": 2019,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "prednisolone,",
+      "start_ms": 2019,
+      "end_ms": 2460,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I'm",
+      "start_ms": 2500,
+      "end_ms": 2539,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "not",
+      "start_ms": 2559,
+      "end_ms": 2639,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "completely",
+      "start_ms": 2659,
+      "end_ms": 2899,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "sure,",
+      "start_ms": 2919,
+      "end_ms": 3279,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "and",
+      "start_ms": 3339,
+      "end_ms": 3399,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "they",
+      "start_ms": 3419,
+      "end_ms": 3480,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "seem",
+      "start_ms": 3500,
+      "end_ms": 3579,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "to",
+      "start_ms": 3599,
+      "end_ms": 3639,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "come",
+      "start_ms": 3659,
+      "end_ms": 3740,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "and",
+      "start_ms": 3759,
+      "end_ms": 3819,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "go",
+      "start_ms": 3819,
+      "end_ms": 3899,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "throughout",
+      "start_ms": 3939,
+      "end_ms": 4099,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "the",
+      "start_ms": 4099,
+      "end_ms": 4159,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "day",
+      "start_ms": 4199,
+      "end_ms": 4339,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    }
+  ]
+}

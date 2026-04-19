@@ -1,0 +1,208 @@
+{
+  "clip_id": "lora__clip_08",
+  "words": [
+    {
+      "text": "My",
+      "start_ms": 0,
+      "end_ms": 336,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "incision",
+      "start_ms": 356,
+      "end_ms": 692,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "area",
+      "start_ms": 712,
+      "end_ms": 1048,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "still",
+      "start_ms": 1068,
+      "end_ms": 1404,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "hurts,",
+      "start_ms": 1424,
+      "end_ms": 1760,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "and",
+      "start_ms": 1780,
+      "end_ms": 2116,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I\u2019ve",
+      "start_ms": 2136,
+      "end_ms": 2472,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "been",
+      "start_ms": 2492,
+      "end_ms": 2828,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "taking",
+      "start_ms": 2848,
+      "end_ms": 3184,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "tramadol",
+      "start_ms": 3204,
+      "end_ms": 3540,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "occasionally,",
+      "start_ms": 3560,
+      "end_ms": 3896,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "maybe",
+      "start_ms": 3916,
+      "end_ms": 4252,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "50",
+      "start_ms": 4272,
+      "end_ms": 4608,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "or",
+      "start_ms": 4628,
+      "end_ms": 4964,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "15",
+      "start_ms": 4984,
+      "end_ms": 5320,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "milligrams",
+      "start_ms": 5340,
+      "end_ms": 5676,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "when",
+      "start_ms": 5696,
+      "end_ms": 6032,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "it",
+      "start_ms": 6052,
+      "end_ms": 6388,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "gets",
+      "start_ms": 6408,
+      "end_ms": 6744,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "bad,",
+      "start_ms": 6764,
+      "end_ms": 7100,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "but",
+      "start_ms": 7120,
+      "end_ms": 7456,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I\u2019m",
+      "start_ms": 7476,
+      "end_ms": 7812,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "not",
+      "start_ms": 7832,
+      "end_ms": 8168,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "sure",
+      "start_ms": 8188,
+      "end_ms": 8524,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "if",
+      "start_ms": 8544,
+      "end_ms": 8880,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I\u2019m",
+      "start_ms": 8900,
+      "end_ms": 9236,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "taking",
+      "start_ms": 9256,
+      "end_ms": 9592,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "too",
+      "start_ms": 9612,
+      "end_ms": 9948,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "much.",
+      "start_ms": 9968,
+      "end_ms": 10304,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    }
+  ]
+}

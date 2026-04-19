@@ -139,12 +139,12 @@ def test_transcribe_passes_requested_stt_model(monkeypatch):
     fresh = TestClient(main.app)
     resp = fresh.post(
         "/transcribe",
-        data={"stt_model": "fine_tuned_telephony"},
+        data={"stt_model": "full_ft"},
         files={"file": ("test.wav", b"RIFF....fake-audio", "audio/wav")},
     )
 
     assert resp.status_code == 200, resp.text
-    assert captured["stt_model"] == "fine_tuned_telephony"
+    assert captured["stt_model"] == "full_ft"
 
 
 def test_transcribe_returns_501_when_person_a_stub(monkeypatch):

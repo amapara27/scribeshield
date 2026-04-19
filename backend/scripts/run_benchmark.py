@@ -739,7 +739,7 @@ def _compute_model_comparison(
             for row in eval_rows
             if isinstance(row, dict) and str(row.get("fine_tuned_model_id") or "").strip()
         ),
-        "fine_tuned_telephony",
+        "full_ft",
     )
 
     base_model = _model_summary_from_eval_rows(
@@ -754,7 +754,7 @@ def _compute_model_comparison(
         eval_rows=eval_rows,
         manifest_rows_by_clip=manifest_rows_by_clip,
         medical_terms=medical_terms,
-        hypothesis_field="fine_tuned_telephony_text",
+        hypothesis_field="full_ft_text",
         wer_scale=wer_scale,
         rate_scale=rate_scale,
     )
@@ -959,7 +959,7 @@ async def _maybe_add_model_comparison_transcripts(
             base_model_id,
             audio_path,
         )
-        eval_row["fine_tuned_telephony_text"] = await _transcribe_with_whisper_model(
+        eval_row["full_ft_text"] = await _transcribe_with_whisper_model(
             str(fine_tuned_model_path),
             audio_path,
         )
@@ -1033,7 +1033,7 @@ async def _generate_eval_rows_via_pipeline(
             "keyterm_raw_text": keyterm_raw_text,
             "medical_keywords": str(manifest_row.get("medical_keywords") or ""),
             "base_whisper_model_id": base_whisper_model_id,
-            "fine_tuned_model_id": "fine_tuned_telephony",
+            "fine_tuned_model_id": "full_ft",
         }
         await _maybe_add_model_comparison_transcripts(
             eval_row,

@@ -13,8 +13,9 @@ from app.config import BACKEND_DIR, settings
 from app.schemas import ScribeResult, ScribeWord
 
 DEFAULT_SPEAKER_ID = "speaker_0"
-DEFAULT_MODEL_PATH = (BACKEND_DIR / "stt" / "models" / "fine_tuned_telephony").resolve()
-LEGACY_MODEL_PATH = (BACKEND_DIR / "whisper_small_telephony_final").resolve()
+DEFAULT_MODEL_PATH = (BACKEND_DIR / "tuned_models" / "full_ft").resolve()
+LEGACY_MODEL_PATH = (BACKEND_DIR / "tuned_models" / "whisper_small_LoRA_normal").resolve()
+OLD_DROPIN_MODEL_PATH = (BACKEND_DIR / "stt" / "models" / "full_ft").resolve()
 _CACHE_LOCK = threading.Lock()
 _LOCAL_PIPELINE_CACHE: dict[str, Any] = {
     "path": None,
@@ -33,6 +34,7 @@ class ModelValidation:
     ready: bool
     reason: str
     path: Path
+    model_format: str = "unknown"
 
 
 @dataclass(slots=True)
@@ -43,10 +45,10 @@ class ResolvedModelLocation:
 
 def _normalize_provider_name(raw: str) -> str:
     value = raw.strip().lower()
-    if value in {"auto", "scribe_v2", "fine_tuned_telephony"}:
+    if value in {"auto", "scribe_v2", "full_ft"}:
         return value
     raise RuntimeError(
-        f"Unsupported STT_PROVIDER={raw!r}; expected auto, scribe_v2, or fine_tuned_telephony"
+        f"Unsupported STT_PROVIDER={raw!r}; expected auto, scribe_v2, or full_ft"
     )
 
 
@@ -65,6 +67,21 @@ def _required_model_files(path: Path) -> list[str]:
     return missing
 
 
+def _required_lora_adapter_files(path: Path) -> list[str]:
+    missing: list[str] = []
+    if not (path / "adapter_config.json").exists():
+        missing.append("adapter_config.json")
+    if not ((path / "adapter_model.safetensors").exists() or (path / "adapter_model.bin").exists()):
+        missing.append("adapter_model.safetensors or adapter_model.bin")
+    if not (path / "preprocessor_config.json").exists():
+        missing.append("preprocessor_config.json")
+    if not (path / "tokenizer_config.json").exists():
+        missing.append("tokenizer_config.json")
+    if not ((path / "tokenizer.json").exists() or (path / "vocab.json").exists()):
+        missing.append("tokenizer.json or vocab.json")
+    return missing
+
+
 def _validate_single_model_path(path: Path) -> ModelValidation:
     model_path = path.expanduser().resolve()
     if not model_path.exists():
@@ -79,14 +96,34 @@ def _validate_single_model_path(path: Path) -> ModelValidation:
             reason=f"model path is not a directory: {model_path}",
             path=model_path,
         )
-    missing = _required_model_files(model_path)
-    if missing:
+    full_missing = _required_model_files(model_path)
+    if not full_missing:
         return ModelValidation(
-            ready=False,
-            reason="missing required files: " + ", ".join(missing),
+            ready=True,
+            reason="full checkpoint files present",
             path=model_path,
+            model_format="full",
         )
-    return ModelValidation(ready=True, reason="model files present", path=model_path)
+
+    lora_missing = _required_lora_adapter_files(model_path)
+    if not lora_missing:
+        return ModelValidation(
+            ready=True,
+            reason="LoRA adapter files present",
+            path=model_path,
+            model_format="lora_adapter",
+        )
+
+    return ModelValidation(
+        ready=False,
+        reason=(
+            "missing required files for full checkpoint: "
+            + ", ".join(full_missing)
+            + "; missing required files for LoRA adapter: "
+            + ", ".join(lora_missing)
+        ),
+        path=model_path,
+    )
 
 
 def _configured_model_path() -> Path:
@@ -95,9 +132,13 @@ def _configured_model_path() -> Path:
 
 def candidate_local_model_paths() -> list[Path]:
     configured = _configured_model_path()
-    candidates: list[Path] = [configured]
-    if configured == DEFAULT_MODEL_PATH and LEGACY_MODEL_PATH != configured:
-        candidates.append(LEGACY_MODEL_PATH)
+    # Search configured path first, then known repository defaults.
+    candidates: list[Path] = [
+        configured,
+        DEFAULT_MODEL_PATH,
+        LEGACY_MODEL_PATH,
+        OLD_DROPIN_MODEL_PATH,
+    ]
     deduped: list[Path] = []
     seen: set[str] = set()
     for candidate in candidates:
@@ -257,6 +298,10 @@ def _load_local_pipeline(model_path: Path) -> Any:
         if _LOCAL_PIPELINE_CACHE["path"] == str(model_path) and _LOCAL_PIPELINE_CACHE["pipeline"] is not None:
             return _LOCAL_PIPELINE_CACHE["pipeline"]
 
+        validation = _validate_single_model_path(model_path)
+        if not validation.ready:
+            raise RuntimeError(f"Fine-tuned STT model invalid: {validation.reason}")
+
         try:
             import torch  # type: ignore[import-not-found]
             from transformers import pipeline  # type: ignore[import-not-found]
@@ -265,17 +310,68 @@ def _load_local_pipeline(model_path: Path) -> Any:
                 "Fine-tuned STT runtime dependencies are missing. Install torch, transformers, sentencepiece, safetensors, and librosa."
             ) from exc
 
-        pipe = pipeline(
-            task="automatic-speech-recognition",
-            model=str(model_path),
-            tokenizer=str(model_path),
-            feature_extractor=str(model_path),
-            device=_pipeline_device(torch),
-            model_kwargs={
-                "torch_dtype": _torch_dtype(torch),
-                "low_cpu_mem_usage": True,
-            },
-        )
+        if validation.model_format == "full":
+            pipe = pipeline(
+                task="automatic-speech-recognition",
+                model=str(model_path),
+                tokenizer=str(model_path),
+                feature_extractor=str(model_path),
+                device=_pipeline_device(torch),
+                model_kwargs={
+                    "torch_dtype": _torch_dtype(torch),
+                    "low_cpu_mem_usage": True,
+                },
+            )
+        elif validation.model_format == "lora_adapter":
+            try:
+                from peft import PeftConfig, PeftModel  # type: ignore[import-not-found]
+                from transformers import (  # type: ignore[import-not-found]
+                    AutoModelForSpeechSeq2Seq,
+                    AutoProcessor,
+                )
+            except Exception as exc:  # noqa: BLE001
+                raise RuntimeError(
+                    "LoRA adapter model detected but dependencies are missing. "
+                    "Install peft (and ensure torch/transformers are installed)."
+                ) from exc
+
+            peft_config = PeftConfig.from_pretrained(str(model_path))
+            base_model_ref = str(getattr(peft_config, "base_model_name_or_path", "") or "").strip()
+            if not base_model_ref:
+                raise RuntimeError(
+                    f"LoRA adapter config at {model_path} is missing base_model_name_or_path"
+                )
+
+            # Prefer tokenizer/feature extractor shipped with adapter; fallback to base model.
+            try:
+                processor = AutoProcessor.from_pretrained(str(model_path))
+            except Exception:
+                processor = AutoProcessor.from_pretrained(base_model_ref)
+
+            base_model = AutoModelForSpeechSeq2Seq.from_pretrained(
+                base_model_ref,
+                torch_dtype=_torch_dtype(torch),
+                low_cpu_mem_usage=True,
+            )
+            model = PeftModel.from_pretrained(base_model, str(model_path))
+
+            # Merge adapter into base model when supported to simplify inference.
+            if hasattr(model, "merge_and_unload"):
+                try:
+                    model = model.merge_and_unload()
+                except Exception:
+                    pass
+
+            pipe = pipeline(
+                task="automatic-speech-recognition",
+                model=model,
+                tokenizer=processor.tokenizer,
+                feature_extractor=processor.feature_extractor,
+                device=_pipeline_device(torch),
+            )
+        else:
+            raise RuntimeError(f"Unsupported model format: {validation.model_format}")
+
         _LOCAL_PIPELINE_CACHE["path"] = str(model_path)
         _LOCAL_PIPELINE_CACHE["pipeline"] = pipe
         return pipe
@@ -291,7 +387,7 @@ class ScribeV2BatchProvider:
 
 
 class FineTunedTelephonyBatchProvider:
-    name = "fine_tuned_telephony"
+    name = "full_ft"
 
     def __init__(self, model_path: Path | None = None):
         validation = resolve_local_model_location(model_path).validation
@@ -330,7 +426,7 @@ def get_batch_provider(provider_override: str | None = None) -> BatchSttProvider
     provider = _normalize_provider_name(provider_override or settings.STT_PROVIDER)
     if provider == "scribe_v2":
         return ScribeV2BatchProvider()
-    if provider == "fine_tuned_telephony":
+    if provider == "full_ft":
         return FineTunedTelephonyBatchProvider()
 
     validation = resolve_local_model_location().validation
@@ -341,7 +437,7 @@ def get_batch_provider(provider_override: str | None = None) -> BatchSttProvider
 
 def ensure_runtime_ready() -> None:
     provider = _normalize_provider_name(settings.STT_PROVIDER)
-    if provider != "fine_tuned_telephony":
+    if provider != "full_ft":
         return
     local_provider = FineTunedTelephonyBatchProvider()
     _load_local_pipeline(local_provider._model_path)
@@ -355,16 +451,16 @@ def batch_provider_status() -> str:
     searched = ", ".join(str(path) for path in resolved.searched_paths)
     if provider == "scribe_v2":
         return "scribe_v2 (forced)"
-    if provider == "fine_tuned_telephony":
+    if provider == "full_ft":
         if validation.ready:
             if loaded_path == str(validation.path):
-                return f"fine_tuned_telephony (forced; loaded from {validation.path})"
-            return f"fine_tuned_telephony (forced; ready at {validation.path})"
-        return f"fine_tuned_telephony (forced; invalid: {validation.reason})"
+                return f"full_ft (forced; loaded from {validation.path})"
+            return f"full_ft (forced; ready at {validation.path})"
+        return f"full_ft (forced; invalid: {validation.reason})"
     if validation.ready:
         if loaded_path == str(validation.path):
-            return f"fine_tuned_telephony (auto; loaded from {validation.path})"
-        return f"fine_tuned_telephony (auto; ready at {validation.path})"
+            return f"full_ft (auto; loaded from {validation.path})"
+        return f"full_ft (auto; ready at {validation.path})"
     return f"scribe_v2 (auto fallback; searched {searched}; local model unavailable: {validation.reason})"
 
 

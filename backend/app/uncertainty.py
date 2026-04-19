@@ -171,7 +171,7 @@ def score_words(
         # verification on medication terms, so force at least MEDIUM review on
         # medical-shaped tokens for this provider.
         if (
-            stt_provider_name == "fine_tuned_telephony"
+            stt_provider_name == "full_ft"
             and word_norm
             and matches_medical(word_norm)
             and score < 0.25

@@ -64,7 +64,7 @@ def test_whisper_medical_words_get_review_highlight(monkeypatch):
         keyterms=["cephalexin"],
         phonetic_map={},
         correction_history={},
-        stt_provider_name="fine_tuned_telephony",
+        stt_provider_name="full_ft",
     )
 
     assert scored[0].confidence in ("LOW", "MEDIUM")

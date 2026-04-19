@@ -1,0 +1,271 @@
+{
+  "clip_id": "scribe_v2__clip_17",
+  "words": [
+    {
+      "text": "I",
+      "start_ms": 79,
+      "end_ms": 99,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "wanted",
+      "start_ms": 99,
+      "end_ms": 259,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "to",
+      "start_ms": 259,
+      "end_ms": 259,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "ask",
+      "start_ms": 280,
+      "end_ms": 359,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "if",
+      "start_ms": 379,
+      "end_ms": 439,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 439,
+      "end_ms": 479,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "should",
+      "start_ms": 500,
+      "end_ms": 559,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "be",
+      "start_ms": 560,
+      "end_ms": 619,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "taking",
+      "start_ms": 619,
+      "end_ms": 759,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "that",
+      "start_ms": 779,
+      "end_ms": 839,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "form",
+      "start_ms": 859,
+      "end_ms": 939,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "in",
+      "start_ms": 1018,
+      "end_ms": 1039,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "five",
+      "start_ms": 1039,
+      "end_ms": 1159,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "hundred",
+      "start_ms": 1240,
+      "end_ms": 1259,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "milligrams",
+      "start_ms": 1259,
+      "end_ms": 2099,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "once",
+      "start_ms": 2099,
+      "end_ms": 2099,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "or",
+      "start_ms": 2099,
+      "end_ms": 2099,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "twice",
+      "start_ms": 2139,
+      "end_ms": 2200,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "daily,",
+      "start_ms": 2220,
+      "end_ms": 2220,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "or",
+      "start_ms": 2240,
+      "end_ms": 2299,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "maybe",
+      "start_ms": 2319,
+      "end_ms": 2419,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "like",
+      "start_ms": 2440,
+      "end_ms": 2519,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "sixteen",
+      "start_ms": 2539,
+      "end_ms": 2679,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "minutes",
+      "start_ms": 2700,
+      "end_ms": 2779,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "twice",
+      "start_ms": 2799,
+      "end_ms": 2879,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "daily.",
+      "start_ms": 2899,
+      "end_ms": 3079,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 3119,
+      "end_ms": 3139,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "might",
+      "start_ms": 3179,
+      "end_ms": 3259,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "be",
+      "start_ms": 3299,
+      "end_ms": 3319,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "saying",
+      "start_ms": 3339,
+      "end_ms": 3419,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "that",
+      "start_ms": 3439,
+      "end_ms": 3500,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "wrong.",
+      "start_ms": 3500,
+      "end_ms": 3720,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 3759,
+      "end_ms": 3779,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "just",
+      "start_ms": 3819,
+      "end_ms": 3879,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "want",
+      "start_ms": 3879,
+      "end_ms": 3919,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "to",
+      "start_ms": 3919,
+      "end_ms": 4038,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "be",
+      "start_ms": 4038,
+      "end_ms": 4038,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "sure",
+      "start_ms": 4038,
+      "end_ms": 4159,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    }
+  ]
+}

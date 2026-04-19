@@ -1,0 +1,257 @@
+{
+  "clip_id": "full_ft__clip_04",
+  "words": [
+    {
+      "text": "Hi,",
+      "start_ms": 0,
+      "end_ms": 313,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 333,
+      "end_ms": 646,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "think",
+      "start_ms": 666,
+      "end_ms": 979,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 999,
+      "end_ms": 1312,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "ran",
+      "start_ms": 1332,
+      "end_ms": 1645,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "out",
+      "start_ms": 1665,
+      "end_ms": 1978,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "of",
+      "start_ms": 1998,
+      "end_ms": 2311,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "metoprolol",
+      "start_ms": 2331,
+      "end_ms": 2644,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "yesterday,",
+      "start_ms": 2664,
+      "end_ms": 2977,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "and",
+      "start_ms": 2997,
+      "end_ms": 3310,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 3330,
+      "end_ms": 3643,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "might",
+      "start_ms": 3663,
+      "end_ms": 3976,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "have",
+      "start_ms": 3996,
+      "end_ms": 4309,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "missed",
+      "start_ms": 4329,
+      "end_ms": 4642,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "a",
+      "start_ms": 4662,
+      "end_ms": 4975,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "dose,",
+      "start_ms": 4995,
+      "end_ms": 5308,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "it\u2019s",
+      "start_ms": 5328,
+      "end_ms": 5641,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "either",
+      "start_ms": 5661,
+      "end_ms": 5974,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "25",
+      "start_ms": 5994,
+      "end_ms": 6307,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "or",
+      "start_ms": 6327,
+      "end_ms": 6640,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "50",
+      "start_ms": 6660,
+      "end_ms": 6973,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "milligrams,",
+      "start_ms": 6993,
+      "end_ms": 7306,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 7326,
+      "end_ms": 7639,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "can\u2019t",
+      "start_ms": 7659,
+      "end_ms": 7972,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "remember",
+      "start_ms": 7992,
+      "end_ms": 8305,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "exactly,",
+      "start_ms": 8325,
+      "end_ms": 8638,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "so",
+      "start_ms": 8658,
+      "end_ms": 8971,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 8991,
+      "end_ms": 9304,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "wanted",
+      "start_ms": 9324,
+      "end_ms": 9637,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "to",
+      "start_ms": 9657,
+      "end_ms": 9970,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "ask",
+      "start_ms": 9990,
+      "end_ms": 10303,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "if",
+      "start_ms": 10323,
+      "end_ms": 10636,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 10656,
+      "end_ms": 10969,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "can",
+      "start_ms": 10989,
+      "end_ms": 11302,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "refill",
+      "start_ms": 11322,
+      "end_ms": 11635,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "it.",
+      "start_ms": 11655,
+      "end_ms": 11968,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    }
+  ]
+}

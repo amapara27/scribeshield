@@ -95,7 +95,7 @@ async def _run_post_scribe(
     t = perf_counter()
     # Whisper fine-tuned runs can emit fewer uncertainty flags even when medical
     # terms are present; force verification on medical-shaped tokens for parity.
-    force_verify_medical_terms = stt_provider_name == "fine_tuned_telephony"
+    force_verify_medical_terms = stt_provider_name == "full_ft"
     flagged = [
         w
         for w in scored

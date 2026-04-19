@@ -1,0 +1,250 @@
+{
+  "clip_id": "lora__clip_07",
+  "words": [
+    {
+      "text": "I",
+      "start_ms": 0,
+      "end_ms": 309,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "had",
+      "start_ms": 329,
+      "end_ms": 638,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "knee",
+      "start_ms": 658,
+      "end_ms": 967,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "surgery",
+      "start_ms": 987,
+      "end_ms": 1296,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "about",
+      "start_ms": 1316,
+      "end_ms": 1625,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "10",
+      "start_ms": 1645,
+      "end_ms": 1954,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "days",
+      "start_ms": 1974,
+      "end_ms": 2283,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "ago,",
+      "start_ms": 2303,
+      "end_ms": 2612,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "and",
+      "start_ms": 2632,
+      "end_ms": 2941,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I\u2019ve",
+      "start_ms": 2961,
+      "end_ms": 3270,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "been",
+      "start_ms": 3290,
+      "end_ms": 3599,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "alternating",
+      "start_ms": 3619,
+      "end_ms": 3928,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "between",
+      "start_ms": 3948,
+      "end_ms": 4257,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "ibuprofen",
+      "start_ms": 4277,
+      "end_ms": 4586,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "and",
+      "start_ms": 4606,
+      "end_ms": 4915,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "acetaminophen,",
+      "start_ms": 4935,
+      "end_ms": 5244,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "like",
+      "start_ms": 5264,
+      "end_ms": 5573,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "maybe",
+      "start_ms": 5593,
+      "end_ms": 5902,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "every",
+      "start_ms": 5922,
+      "end_ms": 6231,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "6",
+      "start_ms": 6251,
+      "end_ms": 6560,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "or",
+      "start_ms": 6580,
+      "end_ms": 6889,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "16",
+      "start_ms": 6909,
+      "end_ms": 7218,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "hours,",
+      "start_ms": 7238,
+      "end_ms": 7547,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "I",
+      "start_ms": 7567,
+      "end_ms": 7876,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "might",
+      "start_ms": 7896,
+      "end_ms": 8205,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "be",
+      "start_ms": 8225,
+      "end_ms": 8534,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "saying",
+      "start_ms": 8554,
+      "end_ms": 8863,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "that",
+      "start_ms": 8883,
+      "end_ms": 9192,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "wrong,",
+      "start_ms": 9212,
+      "end_ms": 9521,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "but",
+      "start_ms": 9541,
+      "end_ms": 9850,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "the",
+      "start_ms": 9870,
+      "end_ms": 10179,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "pain",
+      "start_ms": 10199,
+      "end_ms": 10508,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "is",
+      "start_ms": 10528,
+      "end_ms": 10837,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "still",
+      "start_ms": 10857,
+      "end_ms": 11166,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    },
+    {
+      "text": "there.",
+      "start_ms": 11186,
+      "end_ms": 11495,
+      "speaker_id": "speaker_0",
+      "confidence": null
+    }
+  ]
+}
