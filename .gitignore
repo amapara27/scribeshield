@@ -58,10 +58,10 @@ backend/audio_gen/output
 
 # audio generation
 *.wav
-!frontend/public/demo-audio/
-!frontend/public/demo-audio/**/*.wav
-!frontend/public/emergency-audio/
-!frontend/public/emergency-audio/*.wav
+frontend/public/demo-audio/
+frontend/public/demo-audio/**/*.wav
+frontend/public/emergency-audio/
+frontend/public/emergency-audio/*.wav
 *.source
 *.csv
 
