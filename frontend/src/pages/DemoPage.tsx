@@ -10,7 +10,7 @@ import type { TranscribeResponse, ProcessingStage, RawWord, CorrectedWord } from
 
 type DemoVariant = {
   id: string;
-  variantId: "clear_call" | "ambient_noise" | "heavy_accent" | "clinical_handoff";
+  variantId: "clear_call" | "ambient_noise" | "heavy_accent" | "clinical_handoff" | "medical_term_slip";
   label: string;
   description: string;
   wav: string;
@@ -55,9 +55,16 @@ const makeVariants = (slug: string, situationId: string): DemoVariant[] => ([
     description: "More compressed clinical delivery with ambient room sound.",
     wav: `/demo-audio/${slug}/clinical-handoff.wav`,
   },
+  {
+    id: `${situationId}_medical_term_slip`,
+    variantId: "medical_term_slip",
+    label: "Medical Term Challenge",
+    description: "Extra medical-term stress take with stronger accent, ambiguity, or ambient pressure.",
+    wav: `/demo-audio/${slug}/medical-term-slip.wav`,
+  },
 ]);
 
-/** Canonical situations are generated from backend/audio_gen/input/demo_cards_20260412.csv. */
+/** Canonical situations are generated from backend/audio_gen/input/demo_cards_20260412.csv plus local demo extensions. */
 const SITUATIONS: DemoSituation[] = [
   {
     id: "demo_20260412_medication_refill",
@@ -105,6 +112,15 @@ const SITUATIONS: DemoSituation[] = [
     variants: makeVariants("dose-timing-check", "demo_20260412_dose_timing_check"),
   },
   {
+    id: "demo_20260419_glp1_dose_escalation",
+    baseScriptId: "glp1_dose_escalation",
+    label: "GLP-1 Dose Escalation",
+    description: "Dose increase call about semaglutide with side effects, brand-name confusion, and injection timing questions.",
+    icon: Syringe,
+    category: "Adversarial",
+    variants: makeVariants("glp1-dose-escalation", "demo_20260419_glp1_dose_escalation"),
+  },
+  {
     id: "demo_20260412_rapid_med_list",
     baseScriptId: "rapid_med_list",
     label: "Rapid Med List",
@@ -132,6 +148,12 @@ const formatTime = (value: number) => {
   const minutes = Math.floor(value / 60);
   const seconds = Math.floor(value % 60);
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+};
+
+const formatLatencyCompact = (value: number) => {
+  if (!Number.isFinite(value) || value <= 0) return null;
+  if (value < 1000) return `${Math.round(value)}ms total`;
+  return `${(value / 1000).toFixed(value >= 10000 ? 0 : 1)}s total`;
 };
 
 const generateFallbackWaveform = (seedText: string, bars = 46) => {
@@ -211,16 +233,88 @@ type ModelRunState = {
   error?: string;
 };
 
+type CachedComparisonState = {
+  comparisonRuns: Record<ClinicModelOption, ModelRunState>;
+  activeComparisonTab: ClinicModelOption;
+  errorMessage: string | null;
+  stage: ProcessingStage;
+};
+
+type ComparisonRunSummary = CachedComparisonState & {
+  hadSuccess: boolean;
+};
+
 const createEmptyModelRuns = (): Record<ClinicModelOption, ModelRunState> => ({
   fine_tuned_telephony: { status: "idle" },
   lora: { status: "idle" },
   scribe_v2: { status: "idle" },
 });
 
+const cloneModelRuns = (runs: Record<ClinicModelOption, ModelRunState>): Record<ClinicModelOption, ModelRunState> => ({
+  fine_tuned_telephony: { ...runs.fine_tuned_telephony },
+  lora: { ...runs.lora },
+  scribe_v2: { ...runs.scribe_v2 },
+});
+
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const isTransientLoadError = (message: string) =>
   /load failed|failed to fetch|networkerror|network request failed/i.test(message);
+
+const transcriptRevealDelayMs = (word: string) => {
+  if (/[.!?]$/.test(word)) return 150;
+  if (/[,;:]$/.test(word)) return 90;
+  return 36;
+};
+
+const useTranscriptReveal = <T extends { word: string }>(
+  words: T[] | undefined,
+  loading: boolean,
+  cacheKey?: string,
+) => {
+  const [revealedWordCount, setRevealedWordCount] = useState(0);
+  const loadedKeysRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (loading || !words?.length) {
+      setRevealedWordCount(0);
+      return;
+    }
+
+    if (cacheKey && loadedKeysRef.current.has(cacheKey)) {
+      setRevealedWordCount(words.length);
+      return;
+    }
+
+    let cancelled = false;
+    let timeoutId: number | null = null;
+
+    const step = (nextCount: number) => {
+      if (cancelled) return;
+      setRevealedWordCount(nextCount);
+      if (nextCount >= words.length) {
+        if (cacheKey) loadedKeysRef.current.add(cacheKey);
+        return;
+      }
+
+      const previousWord = words[nextCount - 1]?.word ?? "";
+      timeoutId = window.setTimeout(() => step(nextCount + 1), transcriptRevealDelayMs(previousWord));
+    };
+
+    step(1);
+
+    return () => {
+      cancelled = true;
+      if (timeoutId !== null) window.clearTimeout(timeoutId);
+    };
+  }, [cacheKey, loading, words]);
+
+  return {
+    revealedWordCount,
+    visibleWords: words?.slice(0, revealedWordCount),
+    isAnimating: !!words?.length && revealedWordCount < words.length,
+  };
+};
 
 const DemoPage = () => {
   const [stage, setStage] = useState<ProcessingStage>("idle");
@@ -237,6 +331,8 @@ const DemoPage = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const waveformLoadIdRef = useRef(0);
+  const cachedScenarioRunsRef = useRef<Record<string, CachedComparisonState>>({});
+  const cachedWaveformPeaksRef = useRef<Record<string, number[]>>({});
 
   const resetWorkspaceState = useCallback(() => {
     setErrorMessage(null);
@@ -248,15 +344,16 @@ const DemoPage = () => {
     setIsAudioPlaying(false);
   }, []);
 
-  const runComparison = useCallback(async (file: File) => {
-    setComparisonRuns((prev) => ({
-      ...prev,
+  const runComparison = useCallback(async (file: File): Promise<ComparisonRunSummary> => {
+    const nextRuns: Record<ClinicModelOption, ModelRunState> = {
       fine_tuned_telephony: { status: "pending" },
       lora: { status: "pending" },
       scribe_v2: { status: "pending" },
-    }));
+    };
+    setComparisonRuns(cloneModelRuns(nextRuns));
 
     const runSingleModel = async (model: ClinicModelOption) => {
+      nextRuns[model] = { status: "running" };
       setComparisonRuns((prev) => ({
         ...prev,
         [model]: { status: "running" },
@@ -264,6 +361,7 @@ const DemoPage = () => {
 
       try {
         const data = await transcribeAudio(file, model);
+        nextRuns[model] = { status: "done", result: data };
         setComparisonRuns((prev) => ({
           ...prev,
           [model]: { status: "done", result: data },
@@ -276,6 +374,7 @@ const DemoPage = () => {
           await sleep(500);
           try {
             const data = await transcribeAudio(file, model);
+            nextRuns[model] = { status: "done", result: data };
             setComparisonRuns((prev) => ({
               ...prev,
               [model]: { status: "done", result: data },
@@ -286,6 +385,7 @@ const DemoPage = () => {
           }
         }
 
+        nextRuns[model] = { status: "error", error: message };
         setComparisonRuns((prev) => ({
           ...prev,
           [model]: { status: "error", error: message },
@@ -314,16 +414,32 @@ const DemoPage = () => {
     const failures = outcomes
       .filter((outcome) => !outcome.success)
       .map((outcome) => `${STT_MODEL_LABELS[outcome.model]}: ${outcome.message}`);
+    const finalRuns = cloneModelRuns(nextRuns);
 
     if (firstSuccessfulModel) {
+      const nextErrorMessage = failures.length > 0 ? failures.join(" | ") : null;
       setActiveComparisonTab(firstSuccessfulModel);
       setStage("done");
-      setErrorMessage(failures.length > 0 ? failures.join(" | ") : null);
-      return;
+      setErrorMessage(nextErrorMessage);
+      return {
+        comparisonRuns: finalRuns,
+        activeComparisonTab: firstSuccessfulModel,
+        errorMessage: nextErrorMessage,
+        stage: "done",
+        hadSuccess: true,
+      };
     }
 
+    const nextErrorMessage = failures.join(" | ") || "Transcription failed";
     setStage("error");
-    setErrorMessage(failures.join(" | ") || "Transcription failed");
+    setErrorMessage(nextErrorMessage);
+    return {
+      comparisonRuns: finalRuns,
+      activeComparisonTab: "fine_tuned_telephony",
+      errorMessage: nextErrorMessage,
+      stage: "error",
+      hadSuccess: false,
+    };
   }, []);
 
   const runUploadedFile = useCallback(async (
@@ -352,6 +468,19 @@ const DemoPage = () => {
     situation: DemoSituation,
     variant: DemoVariant,
   ) => {
+    const cached = cachedScenarioRunsRef.current[variant.id];
+    if (cached) {
+      setUploadedSelection(null);
+      setSelectedSituationId(situation.id);
+      setActiveScenario(variant.id);
+      setComparisonRuns(cloneModelRuns(cached.comparisonRuns));
+      setActiveComparisonTab(cached.activeComparisonTab);
+      setStage(cached.stage);
+      setErrorMessage(cached.errorMessage);
+      setWaveformPeaks(cachedWaveformPeaksRef.current[variant.id] ?? generateFallbackWaveform(variant.id));
+      return;
+    }
+
     resetWorkspaceState();
     setUploadedSelection(null);
     setSelectedSituationId(situation.id);
@@ -366,10 +495,19 @@ const DemoPage = () => {
       const blob = await res.blob();
       const loadId = ++waveformLoadIdRef.current;
       void extractWaveformPeaks(blob, variant.id).then((peaks) => {
+        cachedWaveformPeaksRef.current[variant.id] = peaks;
         if (waveformLoadIdRef.current === loadId) setWaveformPeaks(peaks);
       });
       const file = new File([blob], `${variant.id}.wav`, { type: blob.type || "audio/wav" });
-      await runComparison(file);
+      const summary = await runComparison(file);
+      if (summary.hadSuccess) {
+        cachedScenarioRunsRef.current[variant.id] = {
+          comparisonRuns: cloneModelRuns(summary.comparisonRuns),
+          activeComparisonTab: summary.activeComparisonTab,
+          errorMessage: summary.errorMessage,
+          stage: summary.stage,
+        };
+      }
     } catch (e) {
       setStage("error");
       setErrorMessage(e instanceof Error ? e.message : "Transcription failed");
@@ -417,6 +555,13 @@ const DemoPage = () => {
       }
     };
   }, [uploadedSelection]);
+
+  useEffect(() => {
+    if (!activeScenario) return;
+    const cached = cachedScenarioRunsRef.current[activeScenario];
+    if (!cached) return;
+    cached.activeComparisonTab = activeComparisonTab;
+  }, [activeComparisonTab, activeScenario]);
 
   const togglePlayback = useCallback(async () => {
     const audio = audioRef.current;
@@ -480,7 +625,7 @@ const DemoPage = () => {
         <div className="container mx-auto px-6 max-w-[1400px] py-4">
           <h1 className="text-lg font-semibold text-primary-foreground">Clinic Demo</h1>
           <p className="text-sm text-primary-foreground/60 mt-1">
-            Six situations each load multiple generated takes from <code className="text-xs opacity-90">public/demo-audio/</code>, and you can also upload
+            Seven situations each load five generated takes from <code className="text-xs opacity-90">public/demo-audio/</code>, and you can also upload
             your own <code className="text-xs opacity-90 ml-1">mp3</code> or <code className="text-xs opacity-90">wav</code> for{" "}
             <code className="text-xs opacity-90">POST /transcribe</code>
           </p>
@@ -572,10 +717,10 @@ const DemoPage = () => {
                               ? "border-accent bg-accent/10 shadow-card"
                               : "border-border bg-card hover:border-accent/40"
                           }`}
-                        >
+                          >
                           <div className="flex items-center justify-between gap-3">
                             <span className="text-sm font-medium text-foreground">{variant.label}</span>
-                            <Badge variant="secondary" className="text-[10px]">{variant.variantId.replace("_", " ")}</Badge>
+                            <Badge variant="secondary" className="text-[10px]">{variant.variantId.replace(/_/g, " ")}</Badge>
                           </div>
                           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{variant.description}</p>
                         </button>
@@ -702,6 +847,9 @@ const DemoPage = () => {
                   {CORE_MODEL_COMPARE_ORDER.map((model) => {
                     const run = comparisonRuns[model];
                     const isActive = activeComparisonTab === model;
+                    const latencyLabel = run.result
+                      ? formatLatencyCompact(run.result.pipeline_latency_ms.total)
+                      : null;
                     const statusLabel =
                       run.status === "done"
                         ? "Loaded"
@@ -725,6 +873,7 @@ const DemoPage = () => {
                       >
                         <p className="text-sm font-medium text-foreground">{STT_MODEL_LABELS[model]}</p>
                         <p className="text-[11px] text-muted-foreground">{statusLabel}</p>
+                        {latencyLabel && <p className="text-[11px] text-foreground/80">{latencyLabel}</p>}
                       </button>
                     );
                   })}
@@ -753,6 +902,7 @@ const DemoPage = () => {
                   title="Raw Transcript"
                   loading={activeRunLoading}
                   words={activeResult?.raw_transcript}
+                  cacheKey={activeSelection ? `${activeSelection.id}:${activeComparisonTab}:raw` : undefined}
                 />
                 <CorrectedPanel
                   title="Corrected Transcript"
@@ -760,6 +910,7 @@ const DemoPage = () => {
                   words={activeResult?.corrected_transcript}
                   latency={activeResult?.pipeline_latency_ms}
                   sttLabel={STT_MODEL_LABELS[activeComparisonTab]}
+                  cacheKey={activeSelection ? `${activeSelection.id}:${activeComparisonTab}:corrected` : undefined}
                 />
                 <SummaryPanel
                   className="xl:sticky xl:top-24"
@@ -786,70 +937,110 @@ const DemoPage = () => {
 
 /* Sub-components */
 
-const TranscriptPanel = ({ title, loading, words }: { title: string; loading: boolean; words?: RawWord[] }) => (
-  <div className="bg-card rounded-lg shadow-card overflow-hidden min-h-[440px]">
-    <div className="bg-primary px-4 py-3 flex items-center justify-between">
-      <h3 className="text-base font-bold text-primary-foreground">{title}</h3>
-      {words && <Badge variant="secondary" className="text-xs">{words.length} words</Badge>}
+const TranscriptPanel = ({ title, loading, words, cacheKey }: {
+  title: string;
+  loading: boolean;
+  words?: RawWord[];
+  cacheKey?: string;
+}) => {
+  const { visibleWords, isAnimating, revealedWordCount } = useTranscriptReveal(words, loading, cacheKey);
+  const wordLabel = words
+    ? isAnimating
+      ? `${revealedWordCount}/${words.length} words`
+      : `${words.length} words`
+    : "0 words";
+
+  return (
+    <div className="bg-card rounded-lg shadow-card overflow-hidden min-h-[440px]">
+      <div className="bg-primary px-4 py-3 flex items-center justify-between">
+        <h3 className="text-base font-bold text-primary-foreground">{title}</h3>
+        {words && (
+          <div className="flex items-center gap-2">
+            {isAnimating && (
+              <Badge variant="outline" className="border-primary-foreground/25 text-xs text-primary-foreground">
+                Live reveal
+              </Badge>
+            )}
+            <Badge variant="secondary" className="text-xs">{wordLabel}</Badge>
+          </div>
+        )}
+      </div>
+      <div className="p-4 max-h-[520px] overflow-auto">
+        {loading ? (
+          <div className="space-y-3">
+            {[...Array(6)].map((_, i) => <div key={i} className="skeleton h-4 w-full" />)}
+          </div>
+        ) : words ? (
+          <div className="space-y-3">
+            {isAnimating && (
+              <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                Revealing transcript word by word
+              </p>
+            )}
+            <div className="leading-relaxed">
+              {visibleWords?.map((w, i) => {
+                const isSpeakerLabel = w.word === "Doctor:" || w.word === "Patient:";
+                if (isSpeakerLabel) {
+                  return (
+                    <span key={i}>
+                      {i > 0 && <br />}
+                      <Badge className={`mr-2 mt-2 text-xs ${w.speaker === "Doctor" ? "bg-primary/20 text-primary" : "bg-success/20 text-success"}`}>
+                        {w.speaker === "Doctor" ? "Dr." : "Patient"}
+                      </Badge>
+                    </span>
+                  );
+                }
+
+                let wordCls = "text-sm text-foreground";
+                if (w.confidence === "LOW") wordCls = "text-sm bg-signal-red/20 text-signal-red rounded px-0.5 font-medium";
+                else if (w.confidence === "MEDIUM") wordCls = "text-sm bg-warning/20 text-warning rounded px-0.5";
+
+                return (
+                  <Tooltip key={i}>
+                    <TooltipTrigger asChild>
+                      <span className={`${wordCls} cursor-default`}>
+                        {w.word}{" "}
+                      </span>
+                    </TooltipTrigger>
+                    {w.confidence !== "HIGH" && w.uncertainty_signals && (
+                      <TooltipContent>
+                        <p className="text-xs font-semibold mb-1">{w.confidence} confidence</p>
+                        {w.uncertainty_signals.map((s, si) => (
+                          <p key={si} className="text-xs text-muted-foreground">• {s}</p>
+                        ))}
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                );
+              })}
+              {isAnimating && (
+                <span className="ml-1 inline-block h-4 w-0.5 animate-pulse bg-accent align-[-2px]" />
+              )}
+            </div>
+          </div>
+        ) : null}
+      </div>
     </div>
-    <div className="p-4 max-h-[520px] overflow-auto">
-      {loading ? (
-        <div className="space-y-3">
-          {[...Array(6)].map((_, i) => <div key={i} className="skeleton h-4 w-full" />)}
-        </div>
-      ) : words ? (
-        <div className="leading-relaxed">
-          {words.map((w, i) => {
-            const isSpeakerLabel = w.word === "Doctor:" || w.word === "Patient:";
-            if (isSpeakerLabel) {
-              return (
-                <span key={i}>
-                  {i > 0 && <br />}
-                  <Badge className={`mr-2 mt-2 text-xs ${w.speaker === "Doctor" ? "bg-primary/20 text-primary" : "bg-success/20 text-success"}`}>
-                    {w.speaker === "Doctor" ? "Dr." : "Patient"}
-                  </Badge>
-                </span>
-              );
-            }
+  );
+};
 
-            let wordCls = "text-sm text-foreground";
-            if (w.confidence === "LOW") wordCls = "text-sm bg-signal-red/20 text-signal-red rounded px-0.5 font-medium";
-            else if (w.confidence === "MEDIUM") wordCls = "text-sm bg-warning/20 text-warning rounded px-0.5";
-
-            return (
-              <Tooltip key={i}>
-                <TooltipTrigger asChild>
-                  <span className={`${wordCls} cursor-default`}>
-                    {w.word}{" "}
-                  </span>
-                </TooltipTrigger>
-                {w.confidence !== "HIGH" && w.uncertainty_signals && (
-                  <TooltipContent>
-                    <p className="text-xs font-semibold mb-1">{w.confidence} confidence</p>
-                    {w.uncertainty_signals.map((s, si) => (
-                      <p key={si} className="text-xs text-muted-foreground">• {s}</p>
-                    ))}
-                  </TooltipContent>
-                )}
-              </Tooltip>
-            );
-          })}
-        </div>
-      ) : null}
-    </div>
-  </div>
-);
-
-const CorrectedPanel = ({ title, loading, words, latency, sttLabel = "STT" }: {
+const CorrectedPanel = ({ title, loading, words, latency, sttLabel = "STT", cacheKey }: {
   title: string; loading: boolean; words?: CorrectedWord[];
   latency?: TranscribeResponse["pipeline_latency_ms"];
   sttLabel?: string;
+  cacheKey?: string;
 }) => {
+  const { visibleWords, isAnimating, revealedWordCount } = useTranscriptReveal(words, loading, cacheKey);
   const changedCount = words?.filter((word) => word.changed).length ?? 0;
   const unresolvedCount = words?.filter((word) => word.unverified).length ?? 0;
   const tavilyVerifiedCount = words?.filter((word) => word.tavily_verified).length ?? 0;
   const tavilyRan = (latency?.tavily ?? 0) > 0;
   const fmtMs = (value: number) => (value <= 0 ? "<1" : String(value));
+  const wordLabel = words
+    ? isAnimating
+      ? `${revealedWordCount}/${words.length} words`
+      : `${words.length} words`
+    : "0 words";
 
   return (
     <div className="bg-card rounded-lg shadow-card overflow-hidden min-h-[440px]">
@@ -864,6 +1055,12 @@ const CorrectedPanel = ({ title, loading, words, latency, sttLabel = "STT" }: {
         </div>
         {words && (
           <div className="flex shrink-0 items-center gap-2">
+            {isAnimating && (
+              <Badge variant="outline" className="border-primary-foreground/25 text-xs text-primary-foreground">
+                Live reveal
+              </Badge>
+            )}
+            <Badge variant="secondary" className="text-xs">{wordLabel}</Badge>
             <Badge variant="secondary" className="text-xs">{changedCount} changes</Badge>
             {unresolvedCount > 0 && <Badge variant="outline" className="border-primary-foreground/30 text-xs text-primary-foreground">{unresolvedCount} unresolved</Badge>}
           </div>
@@ -885,8 +1082,13 @@ const CorrectedPanel = ({ title, loading, words, latency, sttLabel = "STT" }: {
                     : "No eligible medical terms were sent to Tavily for this clip."}
               </div>
             )}
+            {isAnimating && (
+              <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                Revealing transcript word by word
+              </p>
+            )}
             <div className="leading-relaxed">
-              {words.map((w, i) => {
+              {visibleWords?.map((w, i) => {
                 const isSpeakerLabel = w.word === "Doctor:" || w.word === "Patient:";
                 if (isSpeakerLabel) {
                   return (
@@ -922,6 +1124,9 @@ const CorrectedPanel = ({ title, loading, words, latency, sttLabel = "STT" }: {
                   </span>
                 );
               })}
+              {isAnimating && (
+                <span className="ml-1 inline-block h-4 w-0.5 animate-pulse bg-accent align-[-2px]" />
+              )}
             </div>
           </div>
         ) : null}
