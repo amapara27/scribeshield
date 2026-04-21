@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;600;700&family=Inter:wght@400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -49,6 +49,16 @@
     --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.08);
     --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
 
+    --home-cream: 42 42% 97%;
+    --home-paper: 36 58% 99%;
+    --home-ink: 213 35% 16%;
+    --home-muted: 215 16% 38%;
+    --home-line: 28 22% 83%;
+    --home-coral: 11 83% 68%;
+    --home-mint: 160 39% 85%;
+    --home-sand: 36 70% 90%;
+    --home-sky: 198 65% 90%;
+
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -77,6 +87,53 @@
 }
 
 @layer utilities {
+  .font-display {
+    font-family: 'Fraunces', Georgia, serif;
+  }
+
+  .home-page {
+    background:
+      radial-gradient(circle at top left, rgba(255, 182, 157, 0.22), transparent 28%),
+      radial-gradient(circle at top right, rgba(164, 216, 201, 0.18), transparent 32%),
+      linear-gradient(180deg, hsl(var(--home-paper)), hsl(var(--home-cream)));
+    color: hsl(var(--home-ink));
+  }
+
+  .home-panel {
+    border: 1px solid hsl(var(--home-line) / 0.85);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 253, 249, 0.78));
+    box-shadow: 0 24px 60px rgba(17, 24, 39, 0.08);
+    backdrop-filter: blur(18px);
+  }
+
+  .home-panel-strong {
+    border: 1px solid hsl(var(--home-line));
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(255, 250, 243, 0.92));
+    box-shadow: 0 28px 70px rgba(17, 24, 39, 0.1);
+  }
+
+  .home-grid-paper {
+    background-image:
+      linear-gradient(rgba(201, 178, 163, 0.18) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(201, 178, 163, 0.18) 1px, transparent 1px);
+    background-size: 22px 22px;
+    background-position: center;
+  }
+
+  .home-eyebrow {
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .home-rule {
+    border-top: 1px solid hsl(var(--home-line) / 0.75);
+  }
+
+  .home-chip {
+    border: 1px solid hsl(var(--home-line) / 0.85);
+    background: rgba(255, 255, 255, 0.8);
+  }
+
   .text-gradient-teal {
     @apply bg-clip-text text-transparent;
     background-image: linear-gradient(135deg, hsl(180 100% 33%), hsl(190 80% 40%));

@@ -7,6 +7,7 @@ import Landing from "./pages/Landing";
 import DemoPage from "./pages/DemoPage";
 import EmergencyPage from "./pages/EmergencyPage";
 import BenchmarkPage from "./pages/BenchmarkPage";
+import ArchitecturePage from "./pages/ArchitecturePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/emergency" element={<EmergencyPage />} />
           <Route path="/demo" element={<Navigate to="/clinic" replace />} />
           <Route path="/benchmark" element={<BenchmarkPage />} />
+          <Route path="/architecture" element={<ArchitecturePage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

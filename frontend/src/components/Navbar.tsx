@@ -17,26 +17,31 @@ const Navbar = () => {
 
   const navBg = isHome && !scrolled
     ? "bg-transparent"
-    : "bg-background shadow-card";
+    : "border-b border-border/80 bg-background/90 shadow-card backdrop-blur-md";
 
   const textColor = isHome && !scrolled
-    ? "text-primary-foreground"
+    ? "text-[hsl(var(--home-ink))]"
     : "text-foreground";
+
+  const brandAccent = isHome && !scrolled
+    ? "text-[hsl(var(--home-coral))]"
+    : "text-accent";
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${navBg}`}>
       <div className="container mx-auto flex items-center justify-between px-6 py-4 max-w-[1100px]">
         <Link to="/" className={`text-xl font-bold tracking-tight ${textColor}`}>
-          Scribe<span className="text-accent">Shield</span>
+          Scribe<span className={brandAccent}>Shield</span>
         </Link>
 
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-6">
           <Link to="/" className={`text-sm font-medium hover:text-accent transition-colors ${textColor}`}>Home</Link>
+          <Link to="/architecture" className={`text-sm font-medium hover:text-accent transition-colors ${textColor}`}>Architecture</Link>
           <Link to="/clinic" className={`text-sm font-medium hover:text-accent transition-colors ${textColor}`}>Clinic</Link>
           <Link to="/emergency" className={`text-sm font-medium hover:text-accent transition-colors ${textColor}`}>Emergency</Link>
           <Link to="/benchmark" className={`text-sm font-medium hover:text-accent transition-colors ${textColor}`}>Benchmark</Link>
-          <Button asChild variant="default" className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-pill px-6">
+          <Button asChild variant="default" className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-pill px-6 shadow-none">
             <Link to="/clinic">Try Clinic</Link>
           </Button>
         </div>
@@ -51,6 +56,7 @@ const Navbar = () => {
       {menuOpen && (
         <div className="md:hidden bg-background border-t px-6 py-4 space-y-3 shadow-card">
           <Link to="/" className="block text-sm font-medium text-foreground" onClick={() => setMenuOpen(false)}>Home</Link>
+          <Link to="/architecture" className="block text-sm font-medium text-foreground" onClick={() => setMenuOpen(false)}>Architecture</Link>
           <Link to="/clinic" className="block text-sm font-medium text-foreground" onClick={() => setMenuOpen(false)}>Clinic</Link>
           <Link to="/emergency" className="block text-sm font-medium text-foreground" onClick={() => setMenuOpen(false)}>Emergency</Link>
           <Link to="/benchmark" className="block text-sm font-medium text-foreground" onClick={() => setMenuOpen(false)}>Benchmark</Link>
