@@ -59,9 +59,22 @@ const average = (values: number[]): number =>
     ? 0
     : values.reduce((sum, value) => sum + value, 0) / values.length;
 
+const findModelBenchmark = (
+  benchmark: BenchmarkResponse,
+  id: string,
+) => benchmark.model_benchmarks?.find((row) => row.id === id) ?? null;
+
 export const mapHomeBenchmarkData = (
   benchmark: BenchmarkResponse,
 ): HomeBenchmarkViewModel => {
+  const baselineScribe =
+    findModelBenchmark(benchmark, "scribe_v2")?.avg_wer ??
+    benchmark.aggregate.avg_raw_wer;
+  const baselineWhisper =
+    findModelBenchmark(benchmark, "base_whisper_small")?.avg_wer ??
+    benchmark.comparison?.base_model.avg_wer ??
+    null;
+
   const maxAblationWer = Math.max(
     1,
     ...benchmark.ablation.map((row) => toPercentValue(row.wer) ?? 0),
@@ -116,24 +129,24 @@ export const mapHomeBenchmarkData = (
   return {
     headlineMetrics: [
       {
-        label: "Raw WER",
-        value: formatPercent(benchmark.aggregate.avg_raw_wer),
-        detail: "Baseline error rate on telephony clips before any safety layer.",
+        label: "Baseline ScribeV2",
+        value: formatPercent(baselineScribe),
+        detail: "Untouched ElevenLabs Scribe v2 on benchmark telephony audio, with no ScribeShield additions.",
       },
       {
-        label: "Corrected WER",
+        label: "Baseline Whisper Small",
+        value: formatPercent(baselineWhisper),
+        detail: "Plain `openai/whisper-small` on the same clips, without preprocessing, keyterms, or verification.",
+      },
+      {
+        label: "ScribeShield corrected",
         value: formatPercent(benchmark.aggregate.avg_corrected_wer),
-        detail: "After verification-aware correction and extraction.",
+        detail: "Full pipeline output after preprocessing, dynamic keyterms, uncertainty scoring, Tavily, and Claude.",
       },
       {
-        label: "Average lift",
+        label: "Lift vs ScribeV2",
         value: formatPercent(benchmark.aggregate.avg_improvement_pct),
-        detail: "Mean error reduction across the benchmark set.",
-      },
-      {
-        label: "Unsafe guess rate",
-        value: formatPercent(benchmark.metrics.unsafe_guess_rate),
-        detail: "Unverified corrections made on risky healthcare terms.",
+        detail: "Average relative WER reduction from untouched Scribe v2 baseline to final corrected output.",
       },
     ],
     proofBadges: [

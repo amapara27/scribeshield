@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     ELEVENLABS_API_KEY: SecretStr = SecretStr("")
     # Backward-compatible alias (some env files use ELEVEN_LABS_API_KEY)
     ELEVEN_LABS_API_KEY: SecretStr = SecretStr("")
+    HF_TOKEN: SecretStr = SecretStr("")
+    HUGGINGFACE_HUB_TOKEN: SecretStr = SecretStr("")
 
     # Tunables
     CLAUDE_MODEL: str = "claude-sonnet-4-5"
@@ -57,6 +59,12 @@ class Settings(BaseSettings):
         if primary:
             return primary
         return self.ELEVEN_LABS_API_KEY.get_secret_value().strip()
+
+    def huggingface_token(self) -> str:
+        primary = self.HF_TOKEN.get_secret_value().strip()
+        if primary:
+            return primary
+        return self.HUGGINGFACE_HUB_TOKEN.get_secret_value().strip()
 
     def ffmpeg_ffprobe_explicit(self) -> tuple[str | None, str | None]:
         """Return optional explicit paths for preprocess_for_scribe."""

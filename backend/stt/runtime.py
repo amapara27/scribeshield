@@ -386,6 +386,13 @@ def _pipeline_device(torch_module: Any) -> int | str:
     return 0 if bool(getattr(torch_module.cuda, "is_available", lambda: False)()) else -1
 
 
+def _hf_pretrained_kwargs() -> dict[str, Any]:
+    token = settings.huggingface_token()
+    if not token:
+        return {}
+    return {"token": token}
+
+
 def _load_local_pipeline(model_path: Path) -> Any:
     with _CACHE_LOCK:
         if _LOCAL_PIPELINE_CACHE["path"] == str(model_path) and _LOCAL_PIPELINE_CACHE["pipeline"] is not None:
@@ -404,17 +411,19 @@ def _load_local_pipeline(model_path: Path) -> Any:
             ) from exc
 
         if validation.model_format == "full":
-            pipe = pipeline(
-                task="automatic-speech-recognition",
-                model=str(model_path),
-                tokenizer=str(model_path),
-                feature_extractor=str(model_path),
-                device=_pipeline_device(torch),
-                model_kwargs={
+            pipeline_kwargs: dict[str, Any] = {
+                "task": "automatic-speech-recognition",
+                "model": str(model_path),
+                "tokenizer": str(model_path),
+                "feature_extractor": str(model_path),
+                "device": _pipeline_device(torch),
+                "model_kwargs": {
                     "torch_dtype": _torch_dtype(torch),
                     "low_cpu_mem_usage": True,
                 },
-            )
+            }
+            pipeline_kwargs.update(_hf_pretrained_kwargs())
+            pipe = pipeline(**pipeline_kwargs)
         elif validation.model_format == "lora_adapter":
             try:
                 from peft import PeftConfig, PeftModel  # type: ignore[import-not-found]
@@ -428,7 +437,8 @@ def _load_local_pipeline(model_path: Path) -> Any:
                     "Install peft (and ensure torch/transformers are installed)."
                 ) from exc
 
-            peft_config = PeftConfig.from_pretrained(str(model_path))
+            hf_pretrained_kwargs = _hf_pretrained_kwargs()
+            peft_config = PeftConfig.from_pretrained(str(model_path), **hf_pretrained_kwargs)
             base_model_ref = str(getattr(peft_config, "base_model_name_or_path", "") or "").strip()
             if not base_model_ref:
                 raise RuntimeError(
@@ -437,16 +447,17 @@ def _load_local_pipeline(model_path: Path) -> Any:
 
             # Prefer tokenizer/feature extractor shipped with adapter; fallback to base model.
             try:
-                processor = AutoProcessor.from_pretrained(str(model_path))
+                processor = AutoProcessor.from_pretrained(str(model_path), **hf_pretrained_kwargs)
             except Exception:
-                processor = AutoProcessor.from_pretrained(base_model_ref)
+                processor = AutoProcessor.from_pretrained(base_model_ref, **hf_pretrained_kwargs)
 
             base_model = AutoModelForSpeechSeq2Seq.from_pretrained(
                 base_model_ref,
                 torch_dtype=_torch_dtype(torch),
                 low_cpu_mem_usage=True,
+                **hf_pretrained_kwargs,
             )
-            model = PeftModel.from_pretrained(base_model, str(model_path))
+            model = PeftModel.from_pretrained(base_model, str(model_path), **hf_pretrained_kwargs)
 
             # Merge adapter into base model when supported to simplify inference.
             if hasattr(model, "merge_and_unload"):

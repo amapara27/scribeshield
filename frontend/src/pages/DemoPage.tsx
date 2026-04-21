@@ -618,47 +618,71 @@ const DemoPage = () => {
   }, [runUploadedFile, uploadedSelection]);
 
   return (
-    <div className="min-h-screen bg-secondary">
+    <div className="home-page min-h-screen">
       <Navbar />
 
-      <div className="bg-primary text-primary-foreground pt-20">
-        <div className="container mx-auto px-6 max-w-[1400px] py-4">
-          <h1 className="text-lg font-semibold text-primary-foreground">Clinic Demo</h1>
-          <p className="text-sm text-primary-foreground/60 mt-1">
-            Seven situations each load five generated takes from <code className="text-xs opacity-90">public/demo-audio/</code>, and you can also upload
-            your own <code className="text-xs opacity-90 ml-1">mp3</code> or <code className="text-xs opacity-90">wav</code> for{" "}
-            <code className="text-xs opacity-90">POST /transcribe</code>
+      <section className="px-6 pt-28 pb-6 sm:px-8 lg:px-10">
+        <div className="mx-auto w-full max-w-[1400px]">
+          <p className="home-eyebrow text-[11px] font-semibold text-[hsl(var(--home-muted))]">
+            Clinic
+          </p>
+          <h1 className="mt-4 font-display text-4xl tracking-[-0.04em] text-[hsl(var(--home-ink))] sm:text-5xl">
+            Clinic Demo
+          </h1>
+          <p className="mt-4 max-w-4xl text-sm leading-7 text-[hsl(var(--home-muted))] sm:text-base">
+            Seven situations each load five generated takes from{" "}
+            <code className="rounded-full bg-white/70 px-2 py-0.5 text-xs text-[hsl(var(--home-ink))]">
+              public/demo-audio/
+            </code>
+            , and you can also upload your own{" "}
+            <code className="rounded-full bg-white/70 px-2 py-0.5 text-xs text-[hsl(var(--home-ink))]">
+              mp3
+            </code>{" "}
+            or{" "}
+            <code className="rounded-full bg-white/70 px-2 py-0.5 text-xs text-[hsl(var(--home-ink))]">
+              wav
+            </code>{" "}
+            for{" "}
+            <code className="rounded-full bg-white/70 px-2 py-0.5 text-xs text-[hsl(var(--home-ink))]">
+              POST /transcribe
+            </code>
           </p>
         </div>
-      </div>
+      </section>
 
-      <div className="container mx-auto px-6 max-w-[1440px] py-8">
+      <div className="mx-auto w-full max-w-[1440px] px-6 pb-10 sm:px-8 lg:px-10">
         <div className="grid grid-cols-1 lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)] gap-6 items-start">
           <aside className="lg:sticky lg:top-24">
-            <div className="rounded-lg border border-border bg-card shadow-card overflow-hidden">
-              <div className="border-b border-border px-4 py-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Clinic Options</p>
-                <h2 className="mt-2 text-lg font-semibold text-foreground">Situation Library</h2>
-                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+            <div className="home-panel-strong overflow-hidden rounded-[32px]">
+              <div className="border-b border-[hsl(var(--home-line))/0.8] px-5 py-5">
+                <p className="home-eyebrow text-[11px] font-semibold text-[hsl(var(--home-muted))]">
+                  Clinic Options
+                </p>
+                <h2 className="mt-2 text-lg font-semibold text-[hsl(var(--home-ink))]">
+                  Situation Library
+                </h2>
+                <p className="mt-1 text-sm leading-relaxed text-[hsl(var(--home-muted))]">
                   Keep the situations handy here, then pick the accent or noise take you want to run.
                 </p>
                 <Button
                   type="button"
                   variant="outline"
-                  className="mt-4 w-full justify-center gap-2 rounded-pill"
+                  className="mt-4 w-full justify-center gap-2 rounded-full border-[hsl(var(--home-line))] bg-white/80 text-[hsl(var(--home-ink))] hover:bg-white"
                   onClick={handleUploadClick}
                   disabled={isProcessing}
                 >
                   <Upload className="h-4 w-4" />
                   Upload Audio
                 </Button>
-                <p className="mt-2 text-xs text-muted-foreground">Supports `.mp3` and `.wav` files.</p>
-                <div className="mt-4 rounded-lg border border-border bg-secondary/60 px-3 py-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Model Comparison</p>
-                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                    Each run executes <span className="font-medium text-foreground">Whisper Fine-Tuned</span>,{" "}
-                    <span className="font-medium text-foreground">Whisper LoRA</span>,{" "}
-                    and <span className="font-medium text-foreground">ScribeV2</span> for clinic scenarios.
+                <p className="mt-2 text-xs text-[hsl(var(--home-muted))]">Supports `.mp3` and `.wav` files.</p>
+                <div className="mt-4 rounded-[24px] border border-[hsl(var(--home-line))] bg-white/80 px-3 py-3">
+                  <p className="home-eyebrow text-[11px] font-semibold text-[hsl(var(--home-muted))]">
+                    Model Comparison
+                  </p>
+                  <p className="mt-2 text-xs leading-relaxed text-[hsl(var(--home-muted))]">
+                    Each run executes <span className="font-medium text-[hsl(var(--home-ink))]">Whisper Fine-Tuned</span>,{" "}
+                    <span className="font-medium text-[hsl(var(--home-ink))]">Whisper LoRA</span>,{" "}
+                    and <span className="font-medium text-[hsl(var(--home-ink))]">ScribeV2</span> for clinic scenarios.
                   </p>
                 </div>
                 <input
@@ -670,9 +694,12 @@ const DemoPage = () => {
                 />
               </div>
 
-              <div className="p-3 space-y-4">
+              <div className="p-4 space-y-4">
                 <div className="space-y-2">
-                  <label htmlFor="situation-select" className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  <label
+                    htmlFor="situation-select"
+                    className="home-eyebrow text-[11px] font-semibold text-[hsl(var(--home-muted))]"
+                  >
                     Situation
                   </label>
                   <select
@@ -680,7 +707,7 @@ const DemoPage = () => {
                     value={selectedSituationId}
                     onChange={(event) => setSelectedSituationId(event.target.value)}
                     disabled={isProcessing}
-                    className="w-full rounded-lg border border-border bg-background px-3 py-3 text-sm text-foreground shadow-sm outline-none transition focus:border-accent disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="editorial-input w-full rounded-[20px] px-3 py-3 text-sm outline-none transition focus:border-[hsl(var(--home-coral))] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {SITUATIONS.map((situation) => (
                       <option key={situation.id} value={situation.id}>
@@ -690,19 +717,27 @@ const DemoPage = () => {
                   </select>
                 </div>
 
-                <div className="rounded-lg border border-border bg-secondary/50 p-4">
+                <div className="home-chip rounded-[24px] p-4">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-semibold text-foreground">{selectedSituation.label}</p>
+                    <p className="text-sm font-semibold text-[hsl(var(--home-ink))]">{selectedSituation.label}</p>
                     {selectedSituation.category === "Adversarial" && (
-                      <Badge className="text-[10px] bg-signal-red/10 text-signal-red border-0">Adversarial</Badge>
+                      <Badge className="border-0 bg-[rgba(211,98,78,0.12)] text-[hsl(var(--home-ink))]">
+                        Adversarial
+                      </Badge>
                     )}
-                    <Badge variant="secondary" className="text-[10px]">{selectedSituation.variants.length} takes</Badge>
+                    <Badge className="border-0 bg-[hsl(var(--home-sand))] text-[hsl(var(--home-ink))]">
+                      {selectedSituation.variants.length} takes
+                    </Badge>
                   </div>
-                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{selectedSituation.description}</p>
+                  <p className="mt-2 text-xs leading-relaxed text-[hsl(var(--home-muted))]">
+                    {selectedSituation.description}
+                  </p>
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Available Takes</p>
+                  <p className="home-eyebrow text-[11px] font-semibold text-[hsl(var(--home-muted))]">
+                    Available Takes
+                  </p>
                   <div className="grid grid-cols-1 gap-2">
                     {selectedSituation.variants.map((variant) => {
                       const isActive = activeScenario === variant.id;
@@ -712,17 +747,23 @@ const DemoPage = () => {
                           type="button"
                           onClick={() => !isProcessing && void runScenario(selectedSituation, variant)}
                           disabled={isProcessing}
-                          className={`rounded-lg border px-3 py-3 text-left transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                          className={`rounded-[22px] border px-3 py-3 text-left transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
                             isActive
-                              ? "border-accent bg-accent/10 shadow-card"
-                              : "border-border bg-card hover:border-accent/40"
+                              ? "border-[hsl(var(--home-coral))] bg-[rgba(255,237,230,0.9)] shadow-[0_18px_40px_rgba(17,24,39,0.08)]"
+                              : "border-[hsl(var(--home-line))] bg-white/[0.72] hover:border-[hsl(var(--home-coral))/0.55]"
                           }`}
-                          >
+                        >
                           <div className="flex items-center justify-between gap-3">
-                            <span className="text-sm font-medium text-foreground">{variant.label}</span>
-                            <Badge variant="secondary" className="text-[10px]">{variant.variantId.replace(/_/g, " ")}</Badge>
+                            <span className="text-sm font-medium text-[hsl(var(--home-ink))]">
+                              {variant.label}
+                            </span>
+                            <Badge className="border-0 bg-[rgba(214,231,244,0.95)] text-[hsl(var(--home-ink))]">
+                              {variant.variantId.replace(/_/g, " ")}
+                            </Badge>
                           </div>
-                          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{variant.description}</p>
+                          <p className="mt-1 text-xs leading-relaxed text-[hsl(var(--home-muted))]">
+                            {variant.description}
+                          </p>
                         </button>
                       );
                     })}
@@ -734,19 +775,21 @@ const DemoPage = () => {
 
           <div className="min-w-0 space-y-6">
             {errorMessage && (
-              <div className="rounded-lg border border-signal-red/40 bg-signal-red/10 px-4 py-3 text-sm text-signal-red">
+              <div className="rounded-[24px] border border-[rgba(211,98,78,0.35)] bg-[rgba(255,237,230,0.92)] px-4 py-3 text-sm text-[hsl(var(--home-ink))]">
                 {errorMessage}
               </div>
             )}
 
-            <div className="rounded-lg border border-border bg-card shadow-card p-5">
+            <div className="home-panel-strong rounded-[32px] p-6">
               <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Transcript Workspace</p>
-                  <h2 className="mt-2 text-2xl font-semibold text-foreground">
+                  <p className="home-eyebrow text-[11px] font-semibold text-[hsl(var(--home-muted))]">
+                    Transcript Workspace
+                  </p>
+                  <h2 className="mt-2 text-2xl font-semibold text-[hsl(var(--home-ink))]">
                     {activeSelection ? activeSelection.label : "Run a demo or upload audio to review the transcript"}
                   </h2>
-                  <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+                  <p className="mt-2 max-w-3xl text-sm leading-relaxed text-[hsl(var(--home-muted))]">
                     {activeSelection
                       ? activeSelection.description
                       : "Select a situation and take from the left rail or upload your own audio to inspect the raw transcript, corrected transcript, and clinical summary output."}
@@ -754,13 +797,13 @@ const DemoPage = () => {
                 </div>
                 {activeSelection && (
                   <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="rounded-pill">
+                    <Badge className="rounded-full border-0 bg-[hsl(var(--home-sand))] text-[hsl(var(--home-ink))]">
                       {activeSelection.category}
                     </Badge>
-                    <Badge variant="outline" className="rounded-pill">
+                    <Badge className="rounded-full border-[hsl(var(--home-line))] bg-white/70 text-[hsl(var(--home-muted))]">
                       {CORE_MODEL_COMPARE_ORDER.length}-model comparison
                     </Badge>
-                    <Badge variant="outline" className="rounded-pill">
+                    <Badge className="rounded-full border-[hsl(var(--home-line))] bg-white/70 text-[hsl(var(--home-muted))]">
                       {stage === "done" ? "Loaded" : isProcessing ? "Running" : "Ready"}
                     </Badge>
                   </div>
@@ -769,20 +812,20 @@ const DemoPage = () => {
             </div>
 
             {activeSelection && (
-              <div className="rounded-lg border border-border bg-primary text-primary-foreground shadow-card overflow-hidden">
+              <div className="editorial-card-dark overflow-hidden rounded-[32px]">
                 <div className="flex flex-col gap-5 p-5">
                   <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary-foreground/60">Loaded Audio</p>
-                      <h3 className="mt-2 text-xl font-semibold">{activeSelection.label}</h3>
-                      <p className="mt-1 text-sm text-primary-foreground/70">
+                      <p className="home-eyebrow text-[11px] font-semibold text-white/60">Loaded Audio</p>
+                      <h3 className="mt-2 text-xl font-semibold text-white">{activeSelection.label}</h3>
+                      <p className="mt-1 text-sm text-white/70">
                         Listen to the selected demo clip while reviewing the transcript and clinical summary.
                       </p>
                     </div>
                     <Button
                       type="button"
                       variant="secondary"
-                      className="rounded-pill gap-2 self-start md:self-auto"
+                      className="self-start rounded-full border border-white/15 bg-white/[0.12] text-white hover:bg-white/[0.20] md:self-auto"
                       onClick={() => void togglePlayback()}
                     >
                       {isAudioPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
@@ -790,7 +833,7 @@ const DemoPage = () => {
                     </Button>
                   </div>
 
-                  <div className="rounded-lg bg-black/20 px-4 py-5">
+                  <div className="rounded-[24px] border border-white/10 bg-black/20 px-4 py-5">
                     <div className="flex h-28 items-end gap-1 overflow-hidden">
                       {waveformPeaks.map((peak, index) => {
                         const isPlayed = index / waveformPeaks.length <= progressRatio;
@@ -842,7 +885,7 @@ const DemoPage = () => {
             )}
 
             {anyComparisonResult && (
-              <div className="rounded-lg border border-border bg-card shadow-card p-3">
+              <div className="home-panel rounded-[28px] p-3">
                 <div className="flex flex-wrap gap-2">
                   {CORE_MODEL_COMPARE_ORDER.map((model) => {
                     const run = comparisonRuns[model];
@@ -865,15 +908,17 @@ const DemoPage = () => {
                         type="button"
                         onClick={() => setActiveComparisonTab(model)}
                         disabled={run.status === "idle"}
-                        className={`rounded-lg border px-3 py-2 text-left transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                        className={`rounded-[20px] border px-3 py-2 text-left transition disabled:cursor-not-allowed disabled:opacity-50 ${
                           isActive
-                            ? "border-accent bg-accent/10 shadow-card"
-                            : "border-border bg-background hover:border-accent/40"
+                            ? "border-[hsl(var(--home-coral))] bg-[rgba(255,237,230,0.9)] shadow-[0_14px_30px_rgba(17,24,39,0.08)]"
+                            : "border-[hsl(var(--home-line))] bg-white/70 hover:border-[hsl(var(--home-coral))/0.55]"
                         }`}
                       >
-                        <p className="text-sm font-medium text-foreground">{STT_MODEL_LABELS[model]}</p>
-                        <p className="text-[11px] text-muted-foreground">{statusLabel}</p>
-                        {latencyLabel && <p className="text-[11px] text-foreground/80">{latencyLabel}</p>}
+                        <p className="text-sm font-medium text-[hsl(var(--home-ink))]">{STT_MODEL_LABELS[model]}</p>
+                        <p className="text-[11px] text-[hsl(var(--home-muted))]">{statusLabel}</p>
+                        {latencyLabel && (
+                          <p className="text-[11px] text-[hsl(var(--home-ink))] opacity-80">{latencyLabel}</p>
+                        )}
                       </button>
                     );
                   })}
@@ -882,16 +927,16 @@ const DemoPage = () => {
             )}
 
             {stage === "uploading" && (
-              <div className="bg-card rounded-lg shadow-card p-4 flex items-center gap-3">
+              <div className="home-panel rounded-[24px] p-4 flex items-center gap-3">
                 <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin shrink-0" />
-                <p className="text-sm text-foreground">
+                <p className="text-sm text-[hsl(var(--home-ink))]">
                   Running all models on the server...
                 </p>
               </div>
             )}
 
             {activeRun.status === "error" && activeRun.error && (
-              <div className="rounded-lg border border-signal-red/40 bg-signal-red/10 px-4 py-3 text-sm text-signal-red">
+              <div className="rounded-[24px] border border-[rgba(211,98,78,0.35)] bg-[rgba(255,237,230,0.92)] px-4 py-3 text-sm text-[hsl(var(--home-ink))]">
                 {STT_MODEL_LABELS[activeComparisonTab]} failed: {activeRun.error}
               </div>
             )}
@@ -909,7 +954,6 @@ const DemoPage = () => {
                   loading={activeRunLoading}
                   words={activeResult?.corrected_transcript}
                   latency={activeResult?.pipeline_latency_ms}
-                  sttLabel={STT_MODEL_LABELS[activeComparisonTab]}
                   cacheKey={activeSelection ? `${activeSelection.id}:${activeComparisonTab}:corrected` : undefined}
                 />
                 <SummaryPanel
@@ -921,7 +965,7 @@ const DemoPage = () => {
             )}
 
             {stage === "idle" && (
-              <div className="rounded-lg border border-dashed border-border bg-card/70 px-6 py-16 text-center text-muted-foreground shadow-card">
+              <div className="editorial-empty px-6 py-16 text-center text-[hsl(var(--home-muted))] rounded-[32px]">
                 <Stethoscope className="h-10 w-10 mx-auto mb-3 opacity-40" />
                 <p className="text-sm">Pick a situation, choose one of its takes, or upload your own clip to populate the transcript workspace.</p>
               </div>
@@ -930,7 +974,7 @@ const DemoPage = () => {
         </div>
       </div>
 
-      <Footer />
+      <Footer variant="editorial" />
     </div>
   );
 };
@@ -951,17 +995,19 @@ const TranscriptPanel = ({ title, loading, words, cacheKey }: {
     : "0 words";
 
   return (
-    <div className="bg-card rounded-lg shadow-card overflow-hidden min-h-[440px]">
-      <div className="bg-primary px-4 py-3 flex items-center justify-between">
-        <h3 className="text-base font-bold text-primary-foreground">{title}</h3>
+    <div className="home-panel overflow-hidden rounded-[28px] min-h-[440px]">
+      <div className="flex items-center justify-between border-b border-[hsl(var(--home-line))/0.75] bg-white/60 px-4 py-3">
+        <h3 className="text-base font-semibold text-[hsl(var(--home-ink))]">{title}</h3>
         {words && (
           <div className="flex items-center gap-2">
             {isAnimating && (
-              <Badge variant="outline" className="border-primary-foreground/25 text-xs text-primary-foreground">
+              <Badge className="border-[hsl(var(--home-line))] bg-white/70 text-[hsl(var(--home-muted))]">
                 Live reveal
               </Badge>
             )}
-            <Badge variant="secondary" className="text-xs">{wordLabel}</Badge>
+            <Badge className="border-0 bg-[hsl(var(--home-sand))] text-[hsl(var(--home-ink))]">
+              {wordLabel}
+            </Badge>
           </div>
         )}
       </div>
@@ -973,7 +1019,7 @@ const TranscriptPanel = ({ title, loading, words, cacheKey }: {
         ) : words ? (
           <div className="space-y-3">
             {isAnimating && (
-              <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+              <p className="home-eyebrow text-[11px] font-medium text-[hsl(var(--home-muted))]">
                 Revealing transcript word by word
               </p>
             )}
@@ -984,14 +1030,20 @@ const TranscriptPanel = ({ title, loading, words, cacheKey }: {
                   return (
                     <span key={i}>
                       {i > 0 && <br />}
-                      <Badge className={`mr-2 mt-2 text-xs ${w.speaker === "Doctor" ? "bg-primary/20 text-primary" : "bg-success/20 text-success"}`}>
+                      <Badge
+                        className={`mr-2 mt-2 text-xs border-0 ${
+                          w.speaker === "Doctor"
+                            ? "bg-[rgba(214,231,244,0.95)] text-[hsl(var(--home-ink))]"
+                            : "bg-[rgba(207,232,223,0.95)] text-[hsl(var(--home-ink))]"
+                        }`}
+                      >
                         {w.speaker === "Doctor" ? "Dr." : "Patient"}
                       </Badge>
                     </span>
                   );
                 }
 
-                let wordCls = "text-sm text-foreground";
+                let wordCls = "text-sm text-[hsl(var(--home-ink))]";
                 if (w.confidence === "LOW") wordCls = "text-sm bg-signal-red/20 text-signal-red rounded px-0.5 font-medium";
                 else if (w.confidence === "MEDIUM") wordCls = "text-sm bg-warning/20 text-warning rounded px-0.5";
 
@@ -1024,10 +1076,9 @@ const TranscriptPanel = ({ title, loading, words, cacheKey }: {
   );
 };
 
-const CorrectedPanel = ({ title, loading, words, latency, sttLabel = "STT", cacheKey }: {
+const CorrectedPanel = ({ title, loading, words, latency, cacheKey }: {
   title: string; loading: boolean; words?: CorrectedWord[];
   latency?: TranscribeResponse["pipeline_latency_ms"];
-  sttLabel?: string;
   cacheKey?: string;
 }) => {
   const { visibleWords, isAnimating, revealedWordCount } = useTranscriptReveal(words, loading, cacheKey);
@@ -1035,7 +1086,6 @@ const CorrectedPanel = ({ title, loading, words, latency, sttLabel = "STT", cach
   const unresolvedCount = words?.filter((word) => word.unverified).length ?? 0;
   const tavilyVerifiedCount = words?.filter((word) => word.tavily_verified).length ?? 0;
   const tavilyRan = (latency?.tavily ?? 0) > 0;
-  const fmtMs = (value: number) => (value <= 0 ? "<1" : String(value));
   const wordLabel = words
     ? isAnimating
       ? `${revealedWordCount}/${words.length} words`
@@ -1043,26 +1093,27 @@ const CorrectedPanel = ({ title, loading, words, latency, sttLabel = "STT", cach
     : "0 words";
 
   return (
-    <div className="bg-card rounded-lg shadow-card overflow-hidden min-h-[440px]">
-      <div className="bg-primary px-4 py-3 flex items-start justify-between gap-3">
+    <div className="home-panel overflow-hidden rounded-[28px] min-h-[440px]">
+      <div className="flex items-start justify-between gap-3 border-b border-[hsl(var(--home-line))/0.75] bg-white/60 px-4 py-3">
         <div>
-          <h3 className="text-base font-bold text-primary-foreground">{title}</h3>
-          {latency && (
-            <p className="text-xs text-primary-foreground/60 mt-1">
-              {sttLabel} {fmtMs(latency.scribe)}ms + Tavily {fmtMs(latency.tavily)}ms + Claude {fmtMs(latency.claude)}ms = {fmtMs(latency.total)}ms
-            </p>
-          )}
+          <h3 className="text-base font-semibold text-[hsl(var(--home-ink))]">{title}</h3>
         </div>
         {words && (
           <div className="flex shrink-0 items-center gap-2">
             {isAnimating && (
-              <Badge variant="outline" className="border-primary-foreground/25 text-xs text-primary-foreground">
+              <Badge className="border-[hsl(var(--home-line))] bg-white/70 text-[hsl(var(--home-muted))]">
                 Live reveal
               </Badge>
             )}
-            <Badge variant="secondary" className="text-xs">{wordLabel}</Badge>
-            <Badge variant="secondary" className="text-xs">{changedCount} changes</Badge>
-            {unresolvedCount > 0 && <Badge variant="outline" className="border-primary-foreground/30 text-xs text-primary-foreground">{unresolvedCount} unresolved</Badge>}
+            <Badge className="border-0 bg-[hsl(var(--home-sand))] text-[hsl(var(--home-ink))]">{wordLabel}</Badge>
+            <Badge className="border-0 bg-[rgba(207,232,223,0.95)] text-[hsl(var(--home-ink))]">
+              {changedCount} changes
+            </Badge>
+            {unresolvedCount > 0 && (
+              <Badge className="border-[hsl(var(--home-line))] bg-white/70 text-[hsl(var(--home-muted))]">
+                {unresolvedCount} unresolved
+              </Badge>
+            )}
           </div>
         )}
       </div>
@@ -1074,7 +1125,7 @@ const CorrectedPanel = ({ title, loading, words, latency, sttLabel = "STT", cach
         ) : words ? (
           <div className="space-y-3">
             {changedCount === 0 && (
-              <div className="rounded-lg border border-border bg-secondary/60 px-3 py-2 text-xs text-muted-foreground">
+              <div className="rounded-[18px] border border-[hsl(var(--home-line))/0.8] bg-white/70 px-3 py-2 text-xs text-[hsl(var(--home-muted))]">
                 {tavilyVerifiedCount > 0
                   ? "Tavily verified terms, but no word-level correction was needed for this clip."
                   : tavilyRan
@@ -1083,7 +1134,7 @@ const CorrectedPanel = ({ title, loading, words, latency, sttLabel = "STT", cach
               </div>
             )}
             {isAnimating && (
-              <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+              <p className="home-eyebrow text-[11px] font-medium text-[hsl(var(--home-muted))]">
                 Revealing transcript word by word
               </p>
             )}
@@ -1094,16 +1145,22 @@ const CorrectedPanel = ({ title, loading, words, latency, sttLabel = "STT", cach
                   return (
                     <span key={i}>
                       {i > 0 && <br />}
-                      <Badge className={`mr-2 mt-2 text-xs ${w.speaker === "Doctor" ? "bg-primary/20 text-primary" : "bg-success/20 text-success"}`}>
+                      <Badge
+                        className={`mr-2 mt-2 text-xs border-0 ${
+                          w.speaker === "Doctor"
+                            ? "bg-[rgba(214,231,244,0.95)] text-[hsl(var(--home-ink))]"
+                            : "bg-[rgba(207,232,223,0.95)] text-[hsl(var(--home-ink))]"
+                        }`}
+                      >
                         {w.speaker === "Doctor" ? "Dr." : "Patient"}
                       </Badge>
                     </span>
                   );
                 }
-                let cls = "text-sm text-foreground";
-                if (w.changed && w.tavily_verified) cls = "text-sm bg-accent/15 text-accent underline decoration-accent rounded px-0.5 font-medium";
+                let cls = "text-sm text-[hsl(var(--home-ink))]";
+                if (w.changed && w.tavily_verified) cls = "text-sm rounded px-0.5 font-medium text-[hsl(var(--home-ink))] underline decoration-accent bg-[rgba(31,148,133,0.14)]";
                 else if (w.changed) cls = "text-sm bg-warning/15 text-warning rounded px-0.5";
-                else if (w.unverified) cls = "text-sm text-muted-foreground border-b border-dashed border-muted-foreground";
+                else if (w.unverified) cls = "text-sm border-b border-dashed border-[hsl(var(--home-muted))] text-[hsl(var(--home-muted))]";
 
                 return (
                   <span key={i} className={cls}>
@@ -1140,10 +1197,14 @@ const SummaryPanel = ({ loading, summary, className = "" }: {
   summary?: TranscribeResponse["clinical_summary"];
   className?: string;
 }) => (
-  <div className={`bg-card rounded-lg shadow-card overflow-hidden min-h-[440px] ${className}`}>
-    <div className="bg-primary px-4 py-3 flex items-center justify-between">
-      <h3 className="text-base font-bold text-primary-foreground">Clinical Summary</h3>
-      {summary && <Badge className="bg-success text-success-foreground text-xs rounded-pill">EHR-Ready</Badge>}
+  <div className={`home-panel overflow-hidden rounded-[28px] min-h-[440px] ${className}`}>
+    <div className="flex items-center justify-between border-b border-[hsl(var(--home-line))/0.75] bg-white/60 px-4 py-3">
+      <h3 className="text-base font-semibold text-[hsl(var(--home-ink))]">Clinical Summary</h3>
+      {summary && (
+        <Badge className="rounded-full border-0 bg-[rgba(207,232,223,0.95)] text-[hsl(var(--home-ink))]">
+          EHR-Ready
+        </Badge>
+      )}
     </div>
     <div className="p-4 max-h-[520px] overflow-auto">
       {loading ? (
@@ -1153,14 +1214,14 @@ const SummaryPanel = ({ loading, summary, className = "" }: {
       ) : summary ? (
         <div className="space-y-4">
           {summary.appointment_needed && (
-            <div className="bg-warning/10 border border-warning/30 rounded-lg p-3 flex items-center gap-2">
+            <div className="flex items-center gap-2 rounded-[20px] border border-[rgba(210,141,73,0.35)] bg-[rgba(255,241,227,0.92)] p-3">
               <AlertTriangle className="h-4 w-4 text-warning shrink-0" />
-              <p className="text-sm font-medium text-warning">Follow-up appointment recommended</p>
+              <p className="text-sm font-medium text-[hsl(var(--home-ink))]">Follow-up appointment recommended</p>
             </div>
           )}
 
           <div>
-            <h4 className="text-xs font-bold uppercase text-muted-foreground mb-2">Medications</h4>
+            <h4 className="mb-2 text-xs font-bold uppercase text-[hsl(var(--home-muted))]">Medications</h4>
             <div className="space-y-2">
               {summary.medications.map((med, i) => {
                 const metadata = [med.dosage, med.frequency, med.route].filter((value) => {
@@ -1169,15 +1230,15 @@ const SummaryPanel = ({ loading, summary, className = "" }: {
                 });
 
                 return (
-                  <div key={i} className="bg-secondary rounded-lg p-3">
+                  <div key={i} className="rounded-[20px] border border-[hsl(var(--home-line))/0.8] bg-white/[0.72] p-3">
                     <div className="flex items-center justify-between">
-                      <p className="font-semibold text-sm text-foreground">{med.name}</p>
+                      <p className="text-sm font-semibold text-[hsl(var(--home-ink))]">{med.name}</p>
                       {med.tavily_verified
                         ? <CheckCircle className="h-4 w-4 text-success" />
-                        : <HelpCircle className="h-4 w-4 text-muted-foreground" />}
+                        : <HelpCircle className="h-4 w-4 text-[hsl(var(--home-muted))]" />}
                     </div>
                     {metadata.length > 0 && (
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="mt-1 text-xs text-[hsl(var(--home-muted))]">
                         {metadata.join(" · ")}
                       </p>
                     )}
@@ -1189,10 +1250,12 @@ const SummaryPanel = ({ loading, summary, className = "" }: {
 
           {summary.symptoms.length > 0 && (
             <div>
-              <h4 className="text-xs font-bold uppercase text-muted-foreground mb-2">Symptoms</h4>
+              <h4 className="mb-2 text-xs font-bold uppercase text-[hsl(var(--home-muted))]">Symptoms</h4>
               <div className="flex flex-wrap gap-2">
                 {summary.symptoms.map((s, i) => (
-                  <Badge key={i} variant="secondary" className="rounded-pill">{s}</Badge>
+                  <Badge key={i} className="rounded-full border-0 bg-[hsl(var(--home-sand))] text-[hsl(var(--home-ink))]">
+                    {s}
+                  </Badge>
                 ))}
               </div>
             </div>
@@ -1200,11 +1263,11 @@ const SummaryPanel = ({ loading, summary, className = "" }: {
 
           {summary.follow_up_actions.length > 0 && (
             <div>
-              <h4 className="text-xs font-bold uppercase text-muted-foreground mb-2">Follow-up Actions</h4>
+              <h4 className="mb-2 text-xs font-bold uppercase text-[hsl(var(--home-muted))]">Follow-up Actions</h4>
               <ul className="space-y-1">
                 {summary.follow_up_actions.map((a, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-foreground">
-                    <input type="checkbox" className="mt-1 rounded border-border" readOnly />
+                  <li key={i} className="flex items-start gap-2 text-sm text-[hsl(var(--home-ink))]">
+                    <input type="checkbox" className="mt-1 rounded border-[hsl(var(--home-line))]" readOnly />
                     {a}
                   </li>
                 ))}
@@ -1212,7 +1275,9 @@ const SummaryPanel = ({ loading, summary, className = "" }: {
             </div>
           )}
 
-          <Button variant="outline" className="w-full rounded-pill text-sm gap-2"
+          <Button
+            variant="outline"
+            className="w-full gap-2 rounded-full border-[hsl(var(--home-line))] bg-white/80 text-sm text-[hsl(var(--home-ink))] hover:bg-white"
             onClick={() => {
               const blob = new Blob([JSON.stringify(summary, null, 2)], { type: "application/json" });
               const url = URL.createObjectURL(blob);

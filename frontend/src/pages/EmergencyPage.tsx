@@ -482,33 +482,52 @@ const EmergencyPage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-secondary">
+    <div className="home-page min-h-screen">
       <Navbar />
 
-      <div className="bg-primary text-primary-foreground pt-20">
-        <div className="container mx-auto px-6 max-w-[1400px] py-4">
-          <h1 className="text-lg font-semibold">Emergency Demo</h1>
-          <p className="text-sm text-primary-foreground/70 mt-1">
+      <section className="px-6 pt-28 pb-6 sm:px-8 lg:px-10">
+        <div className="mx-auto w-full max-w-[1400px]">
+          <p className="home-eyebrow text-[11px] font-semibold text-[hsl(var(--home-muted))]">
+            Emergency
+          </p>
+          <h1 className="mt-4 font-display text-4xl tracking-[-0.04em] text-[hsl(var(--home-ink))] sm:text-5xl">
+            Emergency Demo
+          </h1>
+          <p className="mt-4 max-w-4xl text-sm leading-7 text-[hsl(var(--home-muted))] sm:text-base">
             Dedicated emergency audio workflow with emergency-only STT and routing recommendations.
           </p>
         </div>
-      </div>
+      </section>
 
-      <div className="container mx-auto px-6 max-w-[1440px] py-8">
+      <div className="mx-auto w-full max-w-[1440px] px-6 pb-10 sm:px-8 lg:px-10">
         <div className="grid grid-cols-1 lg:grid-cols-[320px_minmax(0,1fr)] gap-6 items-start">
           <aside className="lg:sticky lg:top-24">
-            <div className="rounded-lg border border-border bg-card shadow-card overflow-hidden">
-              <div className="border-b border-border px-4 py-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Emergency Inputs</p>
-                <h2 className="mt-2 text-lg font-semibold text-foreground">Sample Library</h2>
-                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                  Pick emergency scenarios, then run with <span className="font-medium text-foreground">Whisper Tiny LoRA (Emergency)</span>.
+            <div className="home-panel-strong overflow-hidden rounded-[32px]">
+              <div className="border-b border-[hsl(var(--home-line))/0.8] px-5 py-5">
+                <p className="home-eyebrow text-[11px] font-semibold text-[hsl(var(--home-muted))]">
+                  Emergency Inputs
+                </p>
+                <h2 className="mt-2 text-lg font-semibold text-[hsl(var(--home-ink))]">Sample Library</h2>
+                <p className="mt-1 text-sm leading-relaxed text-[hsl(var(--home-muted))]">
+                  Pick emergency scenarios, then run with <span className="font-medium text-[hsl(var(--home-ink))]">Whisper Tiny LoRA (Emergency)</span>.
                 </p>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <Button type="button" variant="default" className="rounded-pill" disabled={isProcessing} onClick={() => void runSelectedSample()}>
+                  <Button
+                    type="button"
+                    variant="default"
+                    className="rounded-full bg-primary text-primary-foreground"
+                    disabled={isProcessing}
+                    onClick={() => void runSelectedSample()}
+                  >
                     Run Selected Sample
                   </Button>
-                  <Button type="button" variant="outline" className="rounded-pill" disabled={isProcessing} onClick={handleUploadClick}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="rounded-full border-[hsl(var(--home-line))] bg-white/80 text-[hsl(var(--home-ink))] hover:bg-white"
+                    disabled={isProcessing}
+                    onClick={handleUploadClick}
+                  >
                     <Upload className="h-4 w-4 mr-2" />
                     Upload Audio
                   </Button>
@@ -516,7 +535,7 @@ const EmergencyPage = () => {
                 <Button
                   type="button"
                   variant="secondary"
-                  className="mt-3 rounded-pill w-full"
+                  className="mt-3 w-full rounded-full border border-[hsl(var(--home-line))] bg-white/70 text-[hsl(var(--home-ink))] hover:bg-white"
                   disabled={isProcessing || !fileRef.current}
                   onClick={() => void rerunCurrentAudio()}
                 >
@@ -531,7 +550,7 @@ const EmergencyPage = () => {
                 />
               </div>
 
-              <div className="p-3 space-y-2">
+              <div className="p-4 space-y-2">
                 {EMERGENCY_SAMPLES.map((sample) => {
                   const selected = sample.id === selectedSampleId;
                   return (
@@ -540,28 +559,30 @@ const EmergencyPage = () => {
                       type="button"
                       disabled={isProcessing}
                       onClick={() => setSelectedSampleId(sample.id)}
-                      className={`w-full rounded-lg border px-3 py-3 text-left transition-all disabled:opacity-60 disabled:cursor-not-allowed ${
-                        selected ? "border-accent bg-accent/10 shadow-card" : "border-border bg-card hover:border-accent/40"
+                      className={`w-full rounded-[22px] border px-3 py-3 text-left transition-all disabled:cursor-not-allowed disabled:opacity-60 ${
+                        selected
+                          ? "border-[hsl(var(--home-coral))] bg-[rgba(255,237,230,0.9)] shadow-[0_18px_40px_rgba(17,24,39,0.08)]"
+                          : "border-[hsl(var(--home-line))] bg-white/[0.72] hover:border-[hsl(var(--home-coral))/0.55]"
                       }`}
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm font-medium text-foreground">{sample.label}</span>
+                        <span className="text-sm font-medium text-[hsl(var(--home-ink))]">{sample.label}</span>
                         <Badge
-                          className={`text-[10px] border-0 ${
+                          className={`border-0 text-[10px] ${
                             sample.severity === "Critical"
-                              ? "bg-signal-red/10 text-signal-red"
-                              : "bg-warning/15 text-warning"
+                              ? "bg-[rgba(211,98,78,0.12)] text-[hsl(var(--home-ink))]"
+                              : "bg-[rgba(255,241,227,0.95)] text-[hsl(var(--home-ink))]"
                           }`}
                         >
                           {sample.severity}
                         </Badge>
                       </div>
-                      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{sample.description}</p>
+                      <p className="mt-1 text-xs leading-relaxed text-[hsl(var(--home-muted))]">{sample.description}</p>
                       <div className="mt-2 flex flex-wrap gap-2">
-                        <span className="rounded-full bg-secondary px-2 py-1 text-[10px] font-medium text-muted-foreground">
+                        <span className="home-chip rounded-full px-2 py-1 text-[10px] font-medium text-[hsl(var(--home-muted))]">
                           {sample.challenge}
                         </span>
-                        <span className="rounded-full bg-secondary px-2 py-1 text-[10px] font-medium text-muted-foreground">
+                        <span className="home-chip rounded-full px-2 py-1 text-[10px] font-medium text-[hsl(var(--home-muted))]">
                           {formatClipLength(sample.durationSec)}
                         </span>
                       </div>
@@ -574,30 +595,30 @@ const EmergencyPage = () => {
 
           <div className="space-y-6 min-w-0">
             {errorMessage && (
-              <div className="rounded-lg border border-signal-red/40 bg-signal-red/10 px-4 py-3 text-sm text-signal-red">
+              <div className="rounded-[24px] border border-[rgba(211,98,78,0.35)] bg-[rgba(255,237,230,0.92)] px-4 py-3 text-sm text-[hsl(var(--home-ink))]">
                 {errorMessage}
               </div>
             )}
 
-            <div className="rounded-lg border border-border bg-card shadow-card p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Emergency Routing</p>
+            <div className="home-panel-strong rounded-[32px] p-5">
+              <p className="home-eyebrow text-[11px] font-semibold text-[hsl(var(--home-muted))]">Emergency Routing</p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <Badge
-                  className={`rounded-pill border-0 ${
+                  className={`rounded-full border-0 ${
                     routingDecision.priority === "RED"
-                      ? "bg-signal-red/15 text-signal-red"
+                      ? "bg-[rgba(211,98,78,0.12)] text-[hsl(var(--home-ink))]"
                       : routingDecision.priority === "ORANGE"
-                        ? "bg-warning/20 text-warning"
-                        : "bg-success/20 text-success"
+                        ? "bg-[rgba(255,241,227,0.95)] text-[hsl(var(--home-ink))]"
+                        : "bg-[rgba(207,232,223,0.95)] text-[hsl(var(--home-ink))]"
                   }`}
                 >
                   Priority {routingDecision.priority}
                 </Badge>
-                <span className="text-sm text-foreground font-medium">{routingDecision.disposition}</span>
+                <span className="text-sm font-medium text-[hsl(var(--home-ink))]">{routingDecision.disposition}</span>
               </div>
               <div className="mt-3 space-y-1">
                 {routingDecision.rationale.map((reason) => (
-                  <p key={reason} className="text-xs text-muted-foreground">
+                  <p key={reason} className="text-xs text-[hsl(var(--home-muted))]">
                     - {reason}
                   </p>
                 ))}
@@ -605,34 +626,39 @@ const EmergencyPage = () => {
             </div>
 
             {selection && (
-              <div className="rounded-lg border border-border bg-primary text-primary-foreground shadow-card overflow-hidden">
+              <div className="editorial-card-dark overflow-hidden rounded-[32px]">
                 <div className="flex flex-col gap-5 p-5">
                   <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary-foreground/60">Loaded Audio</p>
-                      <h3 className="mt-2 text-xl font-semibold">{selection.label}</h3>
-                      <p className="mt-1 text-sm text-primary-foreground/70">{selection.description}</p>
+                      <p className="home-eyebrow text-[11px] font-semibold text-white/60">Loaded Audio</p>
+                      <h3 className="mt-2 text-xl font-semibold text-white">{selection.label}</h3>
+                      <p className="mt-1 text-sm text-white/70">{selection.description}</p>
                       <div className="mt-3 flex flex-wrap gap-2">
-                        <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium text-primary-foreground/85">
+                        <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium text-white/[0.85]">
                           Whisper Tiny LoRA demo
                         </span>
-                        <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium text-primary-foreground/85">
+                        <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium text-white/[0.85]">
                           {formatClipLength(loadedSample?.durationSec ?? audioDuration)}
                         </span>
                         {loadedSample && (
-                          <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium text-primary-foreground/85">
+                          <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium text-white/[0.85]">
                             {loadedSample.challenge}
                           </span>
                         )}
                       </div>
                     </div>
-                    <Button type="button" variant="secondary" className="rounded-pill gap-2" onClick={() => void togglePlayback()}>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      className="rounded-full border border-white/15 bg-white/[0.12] text-white hover:bg-white/[0.20]"
+                      onClick={() => void togglePlayback()}
+                    >
                       {isAudioPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                       {isAudioPlaying ? "Pause Audio" : "Play Audio"}
                     </Button>
                   </div>
 
-                  <div className="rounded-lg bg-black/20 px-4 py-5">
+                  <div className="rounded-[24px] border border-white/10 bg-black/20 px-4 py-5">
                     <div className="flex h-28 items-end gap-1 overflow-hidden">
                       {waveformPeaks.map((peak, index) => {
                         const ratio = audioDuration > 0 ? Math.min(audioCurrentTime / audioDuration, 1) : 0;
@@ -685,35 +711,37 @@ const EmergencyPage = () => {
             )}
 
             {isProcessing && (
-              <div className="bg-card rounded-lg shadow-card p-4 flex items-center gap-3">
+              <div className="home-panel rounded-[24px] p-4 flex items-center gap-3">
                 <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin shrink-0" />
-                <p className="text-sm text-foreground">Running emergency transcription and routing...</p>
+                <p className="text-sm text-[hsl(var(--home-ink))]">Running emergency transcription and routing...</p>
               </div>
             )}
 
             {result && (
               <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.78fr)] gap-6 items-start">
                 <div className="space-y-6">
-                  <div className="rounded-lg border border-border bg-card shadow-card overflow-hidden">
-                    <div className="bg-primary px-4 py-3 flex items-center justify-between">
-                      <h3 className="text-base font-bold text-primary-foreground">Corrected Transcript</h3>
+                  <div className="home-panel overflow-hidden rounded-[28px]">
+                    <div className="flex items-center justify-between border-b border-[hsl(var(--home-line))/0.75] bg-white/60 px-4 py-3">
+                      <h3 className="text-base font-semibold text-[hsl(var(--home-ink))]">Corrected Transcript</h3>
                       <div className="flex items-center gap-2">
                         {isTranscriptAnimating && (
-                          <Badge variant="outline" className="border-primary-foreground/25 text-xs text-primary-foreground">
+                          <Badge className="border-[hsl(var(--home-line))] bg-white/70 text-[hsl(var(--home-muted))]">
                             Live reveal
                           </Badge>
                         )}
-                        <Badge variant="secondary" className="text-xs">{transcriptWordLabel}</Badge>
+                        <Badge className="border-0 bg-[hsl(var(--home-sand))] text-[hsl(var(--home-ink))]">
+                          {transcriptWordLabel}
+                        </Badge>
                       </div>
                     </div>
                     <div className="p-4 max-h-[520px] overflow-auto">
                       <div className="space-y-3">
                         {isTranscriptAnimating && (
-                          <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                          <p className="home-eyebrow text-[11px] font-medium text-[hsl(var(--home-muted))]">
                             Revealing transcript word by word
                           </p>
                         )}
-                        <p className="text-sm leading-relaxed text-foreground">
+                        <p className="text-sm leading-relaxed text-[hsl(var(--home-ink))]">
                           {correctedText || "No corrected transcript text generated."}
                           {isTranscriptAnimating && (
                             <span className="ml-1 inline-block h-4 w-0.5 animate-pulse bg-accent align-[-2px]" />
@@ -723,86 +751,86 @@ const EmergencyPage = () => {
                     </div>
                   </div>
 
-                  <div className="rounded-lg border border-border bg-card shadow-card overflow-hidden">
-                    <div className="bg-primary px-4 py-3">
-                      <h3 className="text-base font-bold text-primary-foreground">Routing Signals</h3>
+                  <div className="home-panel overflow-hidden rounded-[28px]">
+                    <div className="border-b border-[hsl(var(--home-line))/0.75] bg-white/60 px-4 py-3">
+                      <h3 className="text-base font-semibold text-[hsl(var(--home-ink))]">Routing Signals</h3>
                     </div>
                     <div className="p-4 space-y-2 text-sm">
-                      <p className="text-muted-foreground">
-                        <span className="font-medium text-foreground">Low/Medium confidence words:</span> {lowConfidenceCount}
+                      <p className="text-[hsl(var(--home-muted))]">
+                        <span className="font-medium text-[hsl(var(--home-ink))]">Low/Medium confidence words:</span> {lowConfidenceCount}
                       </p>
-                      <p className="text-muted-foreground">
-                        <span className="font-medium text-foreground">Source clip:</span> {loadedSample?.sourceClipId ?? "Uploaded audio"}
+                      <p className="text-[hsl(var(--home-muted))]">
+                        <span className="font-medium text-[hsl(var(--home-ink))]">Source clip:</span> {loadedSample?.sourceClipId ?? "Uploaded audio"}
                       </p>
-                      <p className="text-muted-foreground">
-                        <span className="font-medium text-foreground">Stress profile:</span> {loadedSample?.challenge ?? "User upload"}
+                      <p className="text-[hsl(var(--home-muted))]">
+                        <span className="font-medium text-[hsl(var(--home-ink))]">Stress profile:</span> {loadedSample?.challenge ?? "User upload"}
                       </p>
                     </div>
                   </div>
 
-                  <div className="rounded-lg border border-border bg-card shadow-card overflow-hidden">
-                    <div className="bg-primary px-4 py-3">
-                      <h3 className="text-base font-bold text-primary-foreground">Clinical Summary</h3>
+                  <div className="home-panel overflow-hidden rounded-[28px]">
+                    <div className="border-b border-[hsl(var(--home-line))/0.75] bg-white/60 px-4 py-3">
+                      <h3 className="text-base font-semibold text-[hsl(var(--home-ink))]">Clinical Summary</h3>
                     </div>
                     <div className="p-4 space-y-4 text-sm">
                       {summaryHasContent(result.clinical_summary) ? (
                         <>
                           {result.clinical_summary.symptoms.length > 0 && (
                             <div>
-                              <p className="font-medium text-foreground mb-1">Symptoms</p>
+                              <p className="mb-1 font-medium text-[hsl(var(--home-ink))]">Symptoms</p>
                               {result.clinical_summary.symptoms.map((symptom) => (
-                                <p key={symptom} className="text-muted-foreground">- {symptom}</p>
+                                <p key={symptom} className="text-[hsl(var(--home-muted))]">- {symptom}</p>
                               ))}
                             </div>
                           )}
                           {result.clinical_summary.allergies.length > 0 && (
                             <div>
-                              <p className="font-medium text-foreground mb-1">Allergies</p>
+                              <p className="mb-1 font-medium text-[hsl(var(--home-ink))]">Allergies</p>
                               {result.clinical_summary.allergies.map((allergy) => (
-                                <p key={allergy} className="text-muted-foreground">- {allergy}</p>
+                                <p key={allergy} className="text-[hsl(var(--home-muted))]">- {allergy}</p>
                               ))}
                             </div>
                           )}
                           {result.clinical_summary.follow_up_actions.length > 0 && (
                             <div>
-                              <p className="font-medium text-foreground mb-1">Follow-up Actions</p>
+                              <p className="mb-1 font-medium text-[hsl(var(--home-ink))]">Follow-up Actions</p>
                               {result.clinical_summary.follow_up_actions.map((action) => (
-                                <p key={action} className="text-muted-foreground">- {action}</p>
+                                <p key={action} className="text-[hsl(var(--home-muted))]">- {action}</p>
                               ))}
                             </div>
                           )}
                         </>
                       ) : (
-                        <p className="text-muted-foreground">No structured emergency summary data yet.</p>
+                        <p className="text-[hsl(var(--home-muted))]">No structured emergency summary data yet.</p>
                       )}
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-6 xl:sticky xl:top-24">
-                  <div className="rounded-lg border border-border bg-card shadow-card overflow-hidden">
-                    <div className="bg-primary px-4 py-3">
-                      <h3 className="text-base font-bold text-primary-foreground">Latency Breakdown</h3>
+                  <div className="home-panel overflow-hidden rounded-[28px]">
+                    <div className="border-b border-[hsl(var(--home-line))/0.75] bg-white/60 px-4 py-3">
+                      <h3 className="text-base font-semibold text-[hsl(var(--home-ink))]">Latency Breakdown</h3>
                     </div>
                     <div className="p-4 space-y-4">
                       <div className="grid grid-cols-2 gap-3">
-                        <div className="rounded-lg border border-border bg-secondary/60 px-3 py-3">
-                          <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">Tiny LoRA STT</p>
-                          <p className="mt-2 text-lg font-semibold text-foreground">{formatLatency(modelLatencyMs)}</p>
+                        <div className="rounded-[20px] border border-[hsl(var(--home-line))/0.8] bg-white/70 px-3 py-3">
+                          <p className="home-eyebrow text-[11px] font-medium text-[hsl(var(--home-muted))]">Tiny LoRA STT</p>
+                          <p className="mt-2 text-lg font-semibold text-[hsl(var(--home-ink))]">{formatLatency(modelLatencyMs)}</p>
                         </div>
-                        <div className="rounded-lg border border-border bg-secondary/60 px-3 py-3">
-                          <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">Post-STT Routing</p>
-                          <p className="mt-2 text-lg font-semibold text-foreground">{formatLatency(postProcessingLatencyMs)}</p>
+                        <div className="rounded-[20px] border border-[hsl(var(--home-line))/0.8] bg-white/70 px-3 py-3">
+                          <p className="home-eyebrow text-[11px] font-medium text-[hsl(var(--home-muted))]">Post-STT Routing</p>
+                          <p className="mt-2 text-lg font-semibold text-[hsl(var(--home-ink))]">{formatLatency(postProcessingLatencyMs)}</p>
                         </div>
-                        <div className="rounded-lg border border-border bg-secondary/60 px-3 py-3">
-                          <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">End to End</p>
-                          <p className="mt-2 text-lg font-semibold text-foreground">
+                        <div className="rounded-[20px] border border-[hsl(var(--home-line))/0.8] bg-white/70 px-3 py-3">
+                          <p className="home-eyebrow text-[11px] font-medium text-[hsl(var(--home-muted))]">End to End</p>
+                          <p className="mt-2 text-lg font-semibold text-[hsl(var(--home-ink))]">
                             {formatLatency(result.pipeline_latency_ms.total)}
                           </p>
                         </div>
-                        <div className="rounded-lg border border-border bg-secondary/60 px-3 py-3">
-                          <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">Speed vs Audio</p>
-                          <p className="mt-2 text-lg font-semibold text-foreground">{speedLabel ?? "Waiting for audio"}</p>
+                        <div className="rounded-[20px] border border-[hsl(var(--home-line))/0.8] bg-white/70 px-3 py-3">
+                          <p className="home-eyebrow text-[11px] font-medium text-[hsl(var(--home-muted))]">Speed vs Audio</p>
+                          <p className="mt-2 text-lg font-semibold text-[hsl(var(--home-ink))]">{speedLabel ?? "Waiting for audio"}</p>
                         </div>
                       </div>
 
@@ -811,9 +839,9 @@ const EmergencyPage = () => {
                           <div key={item.key} className="flex items-center justify-between gap-3 text-sm">
                             <div className="flex items-center gap-2">
                               <span className="h-2 w-2 rounded-full bg-accent" />
-                              <span className="text-muted-foreground">{item.label}</span>
+                              <span className="text-[hsl(var(--home-muted))]">{item.label}</span>
                             </div>
-                            <span className="font-medium text-foreground">
+                            <span className="font-medium text-[hsl(var(--home-ink))]">
                               {formatLatency(result.pipeline_latency_ms[item.key])}
                             </span>
                           </div>
@@ -826,7 +854,7 @@ const EmergencyPage = () => {
             )}
 
             {stage === "idle" && (
-              <div className="rounded-lg border border-dashed border-border bg-card/70 px-6 py-16 text-center text-muted-foreground shadow-card">
+              <div className="editorial-empty rounded-[32px] px-6 py-16 text-center text-[hsl(var(--home-muted))]">
                 <AlertTriangle className="h-10 w-10 mx-auto mb-3 opacity-50" />
                 <p className="text-sm">Select an emergency sample or upload audio to run emergency routing.</p>
               </div>
@@ -835,7 +863,7 @@ const EmergencyPage = () => {
         </div>
       </div>
 
-      <Footer />
+      <Footer variant="editorial" />
     </div>
   );
 };

@@ -20,6 +20,7 @@ import asyncio
 import argparse
 import csv
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -39,6 +40,12 @@ _DIGIT_RE = re.compile(r"\d")
 _SOURCE_CLIP_RE = re.compile(r"\((clip_[0-9]{4}_[a-z0-9_]+)\)")
 _WHISPER_PIPELINE_CACHE: dict[str, Any] = {}
 MODEL_BENCHMARK_SPECS: list[dict[str, str]] = [
+    {
+        "id": "base_whisper_small",
+        "label": "Base Whisper Small",
+        "provider": "base_whisper_small",
+        "field": "base_whisper_small_text",
+    },
     {
         "id": "fine_tuned_telephony",
         "label": "Whisper Fine-Tuned",
@@ -459,7 +466,11 @@ def _compute_result_row(
         or row.get("text")
         or manifest.get("ground_truth")
     )
-    raw_text = _coerce_text(row.get("raw_text") or row.get("raw_transcript"))
+    raw_text = _coerce_text(
+        row.get("baseline_raw_text")
+        or row.get("raw_text")
+        or row.get("raw_transcript")
+    )
     corrected_text = _coerce_text(
         row.get("corrected_text") or row.get("corrected_transcript")
     )
@@ -980,16 +991,34 @@ def _load_whisper_pipeline(model_ref: str) -> Any:
             "Benchmark comparison needs torch and transformers installed."
         ) from exc
 
-    pipe = pipeline(
-        task="automatic-speech-recognition",
-        model=model_ref,
-        tokenizer=model_ref,
-        feature_extractor=model_ref,
-        device=-1,
-        model_kwargs={"low_cpu_mem_usage": True},
-    )
+    pipeline_kwargs: dict[str, Any] = {
+        "task": "automatic-speech-recognition",
+        "model": model_ref,
+        "tokenizer": model_ref,
+        "feature_extractor": model_ref,
+        "device": -1,
+        "model_kwargs": {"low_cpu_mem_usage": True},
+    }
+    token = _huggingface_token()
+    if token:
+        pipeline_kwargs["token"] = token
+
+    pipe = pipeline(**pipeline_kwargs)
     _WHISPER_PIPELINE_CACHE[model_ref] = pipe
     return pipe
+
+
+def _huggingface_token() -> str:
+    token = os.getenv("HF_TOKEN", "").strip() or os.getenv("HUGGINGFACE_HUB_TOKEN", "").strip()
+    if token:
+        return token
+
+    _ensure_backend_imports()
+    try:
+        from app.config import settings  # type: ignore
+    except Exception:  # noqa: BLE001
+        return ""
+    return settings.huggingface_token()
 
 
 def _default_transcribe_kwargs() -> dict[str, Any]:
@@ -1019,14 +1048,18 @@ async def _maybe_add_model_comparison_transcripts(
     fine_tuned_model_path: Path | None,
     base_model_id: str,
 ) -> None:
-    if fine_tuned_model_path is None:
-        return
-
     try:
         eval_row["base_whisper_small_text"] = await _transcribe_with_whisper_model(
             base_model_id,
             audio_path,
         )
+    except Exception as exc:  # noqa: BLE001
+        eval_row["base_whisper_small_error"] = str(exc)
+
+    if fine_tuned_model_path is None:
+        return
+
+    try:
         eval_row["full_ft_text"] = await _transcribe_with_whisper_model(
             str(fine_tuned_model_path),
             audio_path,
@@ -1040,6 +1073,7 @@ async def _add_model_benchmark_transcripts(
     eval_rows: Sequence[dict[str, Any]],
     *,
     audio_paths_by_clip: dict[str, Path],
+    base_whisper_model_id: str,
 ) -> None:
     from stt.runtime import get_batch_provider, resolve_named_model_location  # type: ignore
 
@@ -1047,6 +1081,27 @@ async def _add_model_benchmark_transcripts(
         provider_name = spec["provider"]
         hypothesis_field = spec["field"]
         error_field = f"{hypothesis_field}_error"
+
+        if all(_coerce_text(row.get(hypothesis_field)) for row in eval_rows):
+            continue
+
+        if provider_name == "base_whisper_small":
+            for eval_row in eval_rows:
+                clip_id = str(eval_row.get("clip_id") or "").strip()
+                if not clip_id:
+                    continue
+                audio_path = audio_paths_by_clip.get(clip_id)
+                if audio_path is None:
+                    eval_row[error_field] = f"missing benchmark audio for clip {clip_id}"
+                    continue
+                try:
+                    eval_row[hypothesis_field] = await _transcribe_with_whisper_model(
+                        base_whisper_model_id,
+                        audio_path,
+                    )
+                except Exception as exc:  # noqa: BLE001
+                    eval_row[error_field] = str(exc)
+            continue
 
         if provider_name != "scribe_v2":
             validation = resolve_named_model_location(provider_name).validation
@@ -1139,7 +1194,7 @@ async def _generate_eval_rows_via_pipeline(
             "category": str(manifest_row.get("category") or "Unknown"),
             "difficulty": str(manifest_row.get("difficulty") or "Standard"),
             "ground_truth": reference_text,
-            "raw_text": keyterm_raw_text,
+            "raw_text": baseline_raw_text,
             "corrected_text": corrected_text,
             "baseline_raw_text": baseline_raw_text,
             "preprocessed_raw_text": preprocessed_raw_text,
@@ -1193,6 +1248,7 @@ async def _generate_eval_rows_via_pipeline(
     await _add_model_benchmark_transcripts(
         eval_rows,
         audio_paths_by_clip=audio_paths_by_clip,
+        base_whisper_model_id=base_whisper_model_id,
     )
 
     verification_denominator = verified_changes + unresolved_flagged

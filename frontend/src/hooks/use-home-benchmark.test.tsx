@@ -56,10 +56,13 @@ describe("useHomeBenchmarkData", () => {
         avg_corrected_wer: 15.7,
         avg_improvement_pct: 0.37,
       },
-      metrics: {
-        ...MOCK_BENCHMARK.metrics,
-        unsafe_guess_rate: 0.02,
-      },
+      model_benchmarks: (MOCK_BENCHMARK.model_benchmarks ?? []).map((row) =>
+        row.id === "scribe_v2"
+          ? { ...row, avg_wer: 0.249 }
+          : row.id === "base_whisper_small"
+            ? { ...row, avg_wer: 0.31 }
+            : row,
+      ),
     });
 
     renderHarness();
@@ -68,10 +71,10 @@ describe("useHomeBenchmarkData", () => {
       expect(screen.getByText("source:live")).toBeInTheDocument(),
     );
 
-    expect(screen.getByText("Raw WER:24.9%")).toBeInTheDocument();
-    expect(screen.getByText("Corrected WER:15.7%")).toBeInTheDocument();
-    expect(screen.getByText("Average lift:37.0%")).toBeInTheDocument();
-    expect(screen.getByText("Unsafe guess rate:2.0%")).toBeInTheDocument();
+    expect(screen.getByText("Baseline ScribeV2:24.9%")).toBeInTheDocument();
+    expect(screen.getByText("Baseline Whisper Small:31.0%")).toBeInTheDocument();
+    expect(screen.getByText("ScribeShield corrected:15.7%")).toBeInTheDocument();
+    expect(screen.getByText("Lift vs ScribeV2:37.0%")).toBeInTheDocument();
     expect(screen.getByText("error:no")).toBeInTheDocument();
   });
 
@@ -87,12 +90,14 @@ describe("useHomeBenchmarkData", () => {
     expect(screen.getByText("source:snapshot")).toBeInTheDocument();
     expect(
       screen.getByText(
-        `Raw WER:${formatPercent(MOCK_BENCHMARK.aggregate.avg_raw_wer)}`,
+        `Baseline ScribeV2:${formatPercent(
+          MOCK_BENCHMARK.model_benchmarks?.find((row) => row.id === "scribe_v2")?.avg_wer,
+        )}`,
       ),
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        `Corrected WER:${formatPercent(
+        `ScribeShield corrected:${formatPercent(
           MOCK_BENCHMARK.aggregate.avg_corrected_wer,
         )}`,
       ),

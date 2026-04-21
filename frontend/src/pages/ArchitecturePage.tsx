@@ -77,7 +77,7 @@ const modelCards = [
     subtitle: "Specialized emergency variant",
     copy: "This is a separate local adapter path intended for the emergency flow. It is benchmarked as its own model instead of being treated as just another UI mode.",
     detail:
-      "In the current checked-in artifact, this variant actually has the strongest average WER among the exposed model rows.",
+      "It is useful as a separate benchmark row because its behavior can diverge from the clinic-oriented fine-tuned and LoRA variants.",
   },
 ];
 

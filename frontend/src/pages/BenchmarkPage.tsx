@@ -329,26 +329,31 @@ const BenchmarkPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="home-page min-h-screen">
       <Navbar />
 
-      <section className="pt-28 pb-10">
-        <div className="container mx-auto px-6 max-w-[900px] space-y-3">
+      <section className="px-6 pt-28 pb-8 sm:px-8 lg:px-10">
+        <div className="mx-auto max-w-[900px] space-y-4">
           {benchmarkNote && (
-            <div className="rounded-lg border border-warning/40 bg-warning/10 px-4 py-2 text-sm text-warning">
+            <div className="rounded-[24px] border border-[rgba(210,141,73,0.35)] bg-[rgba(255,241,227,0.92)] px-4 py-3 text-sm text-[hsl(var(--home-ink))]">
               {benchmarkNote}
             </div>
           )}
           {dataSource === "api" && data && !benchmarkNote && (
-            <div className="rounded-lg border border-success/30 bg-success/10 px-4 py-2 text-xs text-success">
+            <div className="rounded-[24px] border border-[rgba(77,150,108,0.28)] bg-[rgba(207,232,223,0.92)] px-4 py-3 text-xs text-[hsl(var(--home-ink))]">
               Showing benchmark results from API (
               {import.meta.env.VITE_API_URL || "VITE_API_URL"})
             </div>
           )}
-          <h1 className="text-2xl font-bold text-foreground">Benchmark Results</h1>
+          <p className="home-eyebrow text-[11px] font-semibold text-[hsl(var(--home-muted))]">
+            Benchmark
+          </p>
+          <h1 className="font-display text-4xl tracking-[-0.04em] text-[hsl(var(--home-ink))] sm:text-5xl">
+            Benchmark Results
+          </h1>
           {data ? (
-            <p className="text-sm text-muted-foreground mt-2">
-              {fmtPercent(data.aggregate.avg_improvement_pct)} average correction lift.
+            <p className="text-sm leading-7 text-[hsl(var(--home-muted))] sm:text-base">
+              {fmtPercent(data.aggregate.avg_improvement_pct)} average lift from untouched Scribe v2 baseline to corrected pipeline output.
               Verification rate {fmtPercent(data.metrics.verification_rate)}, unsafe
               guess rate {fmtPercent(data.metrics.unsafe_guess_rate)}.
               {bestModel
@@ -359,7 +364,7 @@ const BenchmarkPage = () => {
                 : ""}
             </p>
           ) : (
-            <p className="text-sm text-muted-foreground mt-2">
+            <p className="text-sm leading-7 text-[hsl(var(--home-muted))] sm:text-base">
               This page only shows API-backed benchmark results. Generate real data
               with `backend/scripts/run_benchmark.py --run-pipeline` and reload.
             </p>
@@ -367,10 +372,10 @@ const BenchmarkPage = () => {
         </div>
       </section>
 
-      <div className="container mx-auto px-6 max-w-[900px] pb-20">
+      <div className="mx-auto max-w-[900px] px-6 pb-20 sm:px-8 lg:px-10">
         {loading && (
           <FadeInSection>
-            <div className="rounded-lg border shadow-card p-6 text-sm text-muted-foreground">
+            <div className="home-panel rounded-[28px] p-6 text-sm text-[hsl(var(--home-muted))]">
               Loading benchmark results from the backend...
             </div>
           </FadeInSection>
@@ -378,7 +383,7 @@ const BenchmarkPage = () => {
 
         {!data && !loading && (
           <FadeInSection>
-            <div className="rounded-lg border shadow-card p-6 text-sm text-muted-foreground">
+            <div className="home-panel rounded-[28px] p-6 text-sm text-[hsl(var(--home-muted))]">
               The backend did not return benchmark results. Start the API, then run
               `python backend/scripts/run_benchmark.py --run-pipeline` so `/benchmark`
               serves real data instead of sample numbers.
@@ -389,19 +394,21 @@ const BenchmarkPage = () => {
         {data && (
           <>
         <FadeInSection>
-          <div className="mb-12">
+          <div className="home-panel-strong mb-12 rounded-[32px] p-6 sm:p-8">
             <div className="flex items-end justify-between gap-4 mb-4">
               <div>
-                <h2 className="text-2xl font-bold">Model Benchmarks</h2>
-                <p className="text-sm text-muted-foreground mt-1">
+                <h2 className="font-display text-3xl tracking-[-0.04em] text-[hsl(var(--home-ink))]">
+                  Model Benchmarks
+                </h2>
+                <p className="mt-2 text-sm text-[hsl(var(--home-muted))]">
                   Ranked by healthcare-weighted quality score (medical keyword accuracy,
-                  digit accuracy, then WER), including emergency fallback.
+                  digit accuracy, then WER), including untouched baselines and emergency fallback.
                 </p>
               </div>
               {bestModel && (
-                <div className="rounded-lg border border-success/30 bg-success/10 px-4 py-3 text-right">
-                  <div className="text-xs uppercase tracking-[0.2em] text-success">Best Overall</div>
-                  <div className="text-lg font-semibold text-foreground">
+                <div className="rounded-[24px] border border-[rgba(77,150,108,0.28)] bg-[rgba(207,232,223,0.92)] px-4 py-3 text-right">
+                  <div className="home-eyebrow text-xs font-semibold text-[hsl(var(--home-muted))]">Best Overall</div>
+                  <div className="text-lg font-semibold text-[hsl(var(--home-ink))]">
                     {bestModel.label}: {bestModel.qualityScore.toFixed(1)}
                   </div>
                 </div>
@@ -409,9 +416,9 @@ const BenchmarkPage = () => {
             </div>
 
             {modelBenchmarks.length > 0 ? (
-              <div className="overflow-x-auto rounded-lg border shadow-card">
+              <div className="editorial-table overflow-x-auto rounded-[28px]">
                 <table className="w-full text-sm">
-                  <thead className="bg-primary text-primary-foreground">
+                  <thead className="editorial-table-head">
                     <tr>
                       <th className="px-4 py-3 text-left">Model</th>
                       <th className="px-4 py-3 text-left">Quality Score</th>
@@ -426,25 +433,25 @@ const BenchmarkPage = () => {
                     {modelBenchmarks.map((row, index) => (
                       <tr
                         key={row.id}
-                        className={`border-t ${index % 2 === 0 ? "" : "bg-secondary/50"}`}
+                        className={`border-t border-[hsl(var(--home-line))/0.7] ${index % 2 === 0 ? "" : "bg-[rgba(255,250,243,0.72)]"}`}
                       >
-                        <td className="px-4 py-3 font-medium text-foreground">{row.label}</td>
-                        <td className="px-4 py-3">{row.qualityScore.toFixed(1)}</td>
-                        <td className="px-4 py-3">{row.clip_count}</td>
-                        <td className="px-4 py-3">{fmtPercent(row.avg_wer)}</td>
-                        <td className="px-4 py-3">{fmtPercent(row.avg_cer)}</td>
-                        <td className="px-4 py-3">{fmtPercent(row.avg_digit_accuracy)}</td>
-                        <td className="px-4 py-3">{fmtPercent(row.avg_medical_keyword_accuracy)}</td>
+                        <td className="px-4 py-3 font-medium text-[hsl(var(--home-ink))]">{row.label}</td>
+                        <td className="px-4 py-3 text-[hsl(var(--home-ink))]">{row.qualityScore.toFixed(1)}</td>
+                        <td className="px-4 py-3 text-[hsl(var(--home-muted))]">{row.clip_count}</td>
+                        <td className="px-4 py-3 text-[hsl(var(--home-muted))]">{fmtPercent(row.avg_wer)}</td>
+                        <td className="px-4 py-3 text-[hsl(var(--home-muted))]">{fmtPercent(row.avg_cer)}</td>
+                        <td className="px-4 py-3 text-[hsl(var(--home-muted))]">{fmtPercent(row.avg_digit_accuracy)}</td>
+                        <td className="px-4 py-3 text-[hsl(var(--home-muted))]">{fmtPercent(row.avg_medical_keyword_accuracy)}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             ) : (
-              <div className="rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-warning">
+              <div className="rounded-[24px] border border-[rgba(210,141,73,0.35)] bg-[rgba(255,241,227,0.92)] px-4 py-3 text-sm text-[hsl(var(--home-ink))]">
                 Model benchmark rows have not been generated yet. Re-run
                 `backend/scripts/run_benchmark.py --run-pipeline` after the
-                `fine_tuned_telephony`, `lora`, `scribe_v2`, and `emergency_lora`
+                `openai/whisper-small`, `fine_tuned_telephony`, `lora`, `scribe_v2`, and `emergency_lora`
                 providers are available.
               </div>
             )}
@@ -452,10 +459,13 @@ const BenchmarkPage = () => {
         </FadeInSection>
 
         <FadeInSection>
-          <h2 className="text-2xl font-bold mb-6">Ablation Study</h2>
-          <div className="overflow-x-auto rounded-lg border shadow-card mb-12">
+          <div className="home-panel mb-12 rounded-[32px] p-6 sm:p-8">
+            <h2 className="mb-6 font-display text-3xl tracking-[-0.04em] text-[hsl(var(--home-ink))]">
+              Ablation Study
+            </h2>
+            <div className="editorial-table overflow-x-auto rounded-[28px]">
             <table className="w-full text-sm">
-              <thead className="bg-primary text-primary-foreground">
+              <thead className="editorial-table-head">
                 <tr>
                   <th className="px-4 py-3 text-left">Pipeline Stage</th>
                   <th className="px-4 py-3 text-left w-32">WER</th>
@@ -467,19 +477,19 @@ const BenchmarkPage = () => {
                 {ablationRows.map((row, i) => (
                   <tr
                     key={i}
-                    className={`border-t ${i % 2 === 0 ? "" : "bg-secondary/50"}`}
+                    className={`border-t border-[hsl(var(--home-line))/0.7] ${i % 2 === 0 ? "" : "bg-[rgba(255,250,243,0.72)]"}`}
                   >
-                    <td className="px-4 py-3 font-medium text-foreground">
+                    <td className="px-4 py-3 font-medium text-[hsl(var(--home-ink))]">
                       {row.stage}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-foreground">
+                        <span className="font-semibold text-[hsl(var(--home-ink))]">
                           {fmtPercent(row.wer_pct)}
                         </span>
-                        <div className="flex-1 bg-muted rounded-full h-2 max-w-[90px]">
+                        <div className="h-2 max-w-[90px] flex-1 rounded-full bg-[hsl(var(--home-sand))]">
                           <div
-                            className="bg-accent rounded-full h-2 transition-all"
+                            className="h-2 rounded-full bg-[hsl(var(--home-coral))] transition-all"
                             style={{ width: `${(row.wer_pct / maxAblationWer) * 100}%` }}
                           />
                         </div>
@@ -501,7 +511,7 @@ const BenchmarkPage = () => {
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground text-xs">
+                    <td className="px-4 py-3 text-xs text-[hsl(var(--home-muted))]">
                       {row.description}
                     </td>
                   </tr>
@@ -509,19 +519,20 @@ const BenchmarkPage = () => {
               </tbody>
             </table>
           </div>
+          </div>
         </FadeInSection>
 
         <div className="mb-12">
-          <h2 className="text-lg font-semibold mb-4">Key Metrics</h2>
+          <h2 className="mb-4 font-display text-3xl tracking-[-0.04em] text-[hsl(var(--home-ink))]">Key Metrics</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {metricCards.map((metric) => (
               <Tooltip key={metric.label}>
                 <TooltipTrigger asChild>
-                  <div className="border rounded-md p-3 text-center cursor-default">
-                    <p className="text-lg font-semibold text-foreground">
+                  <div className="home-panel rounded-[24px] p-4 text-center cursor-default">
+                    <p className="font-display text-3xl tracking-[-0.04em] text-[hsl(var(--home-ink))]">
                       {metric.value}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
+                    <p className="mt-1 text-xs text-[hsl(var(--home-muted))]">
                       {metric.label}
                     </p>
                   </div>
@@ -535,15 +546,20 @@ const BenchmarkPage = () => {
         </div>
 
         <FadeInSection>
+          <div className="mb-12 home-panel rounded-[32px] p-6 sm:p-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold">Per-Clip Results</h2>
+            <h2 className="font-display text-3xl tracking-[-0.04em] text-[hsl(var(--home-ink))]">Per-Clip Results</h2>
             <div className="flex gap-2">
               {(["all", "Standard", "Adversarial"] as Filter[]).map((value) => (
                 <Button
                   key={value}
                   variant={filter === value ? "default" : "outline"}
                   size="sm"
-                  className={filter === value ? "bg-accent text-accent-foreground" : ""}
+                  className={
+                    filter === value
+                      ? "rounded-full bg-primary text-primary-foreground"
+                      : "rounded-full border-[hsl(var(--home-line))] bg-white/80 text-[hsl(var(--home-ink))] hover:bg-white"
+                  }
                   onClick={() => setFilter(value)}
                 >
                   {value === "all" ? "All" : value}
@@ -552,21 +568,21 @@ const BenchmarkPage = () => {
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-lg border shadow-card mb-12">
+          <div className="editorial-table overflow-x-auto rounded-[28px]">
             <table className="w-full text-sm">
-              <thead className="bg-primary text-primary-foreground">
+              <thead className="editorial-table-head">
                 <tr>
-                  {[
-                    { key: "clip_id" as SortKey, label: "Clip" },
-                    { key: "category" as SortKey, label: "Category" },
-                    { key: "difficulty" as SortKey, label: "Difficulty" },
-                    { key: "raw_wer" as SortKey, label: "Raw WER" },
-                    { key: "corrected_wer" as SortKey, label: "Corrected WER" },
-                    { key: "improvement_pct" as SortKey, label: "Delta %" },
-                  ].map((col) => (
+                    {[
+                      { key: "clip_id" as SortKey, label: "Clip" },
+                      { key: "category" as SortKey, label: "Category" },
+                      { key: "difficulty" as SortKey, label: "Difficulty" },
+                      { key: "raw_wer" as SortKey, label: "Baseline ScribeV2 WER" },
+                      { key: "corrected_wer" as SortKey, label: "ScribeShield WER" },
+                      { key: "improvement_pct" as SortKey, label: "Lift vs baseline" },
+                    ].map((col) => (
                     <th
                       key={col.key}
-                      className="px-4 py-3 text-left cursor-pointer hover:bg-primary-foreground/10 whitespace-nowrap"
+                      className="cursor-pointer whitespace-nowrap px-4 py-3 text-left hover:bg-white/10"
                       onClick={() => toggleSort(col.key)}
                     >
                       <span className="flex items-center gap-1">
@@ -581,23 +597,23 @@ const BenchmarkPage = () => {
                 {filtered.map((row, i) => (
                   <tr
                     key={row.clip_id}
-                    className={`border-t hover:bg-accent/5 transition-colors ${i % 2 === 0 ? "" : "bg-secondary/50"}`}
+                    className={`border-t border-[hsl(var(--home-line))/0.7] transition-colors hover:bg-[rgba(214,231,244,0.18)] ${i % 2 === 0 ? "" : "bg-[rgba(255,250,243,0.72)]"}`}
                   >
-                    <td className="px-4 py-3 font-medium">{row.clip_id}</td>
-                    <td className="px-4 py-3">{row.category}</td>
+                    <td className="px-4 py-3 font-medium text-[hsl(var(--home-ink))]">{row.clip_id}</td>
+                    <td className="px-4 py-3 text-[hsl(var(--home-muted))]">{row.category}</td>
                     <td className="px-4 py-3">
                       <Badge
                         className={
                           row.difficulty === "Adversarial"
-                            ? "bg-signal-red text-accent-foreground"
-                            : "bg-muted text-muted-foreground"
+                            ? "border-0 bg-[rgba(211,98,78,0.12)] text-[hsl(var(--home-ink))]"
+                            : "border-0 bg-[hsl(var(--home-sand))] text-[hsl(var(--home-ink))]"
                         }
                       >
                         {row.difficulty}
                       </Badge>
                     </td>
-                    <td className="px-4 py-3">{fmtPercent(row.raw_wer)}</td>
-                    <td className="px-4 py-3">{fmtPercent(row.corrected_wer)}</td>
+                    <td className="px-4 py-3 text-[hsl(var(--home-muted))]">{fmtPercent(row.raw_wer)}</td>
+                    <td className="px-4 py-3 text-[hsl(var(--home-muted))]">{fmtPercent(row.corrected_wer)}</td>
                     <td className="px-4 py-3">
                       <span
                         className={
@@ -615,13 +631,15 @@ const BenchmarkPage = () => {
               </tbody>
             </table>
           </div>
+          </div>
         </FadeInSection>
 
         <FadeInSection>
-          <h3 className="text-lg font-bold mb-4">
+          <div className="home-panel mb-12 rounded-[32px] p-6">
+          <h3 className="mb-4 text-xl font-semibold text-[hsl(var(--home-ink))]">
             Average Improvement by Category
           </h3>
-          <div className="h-64 mb-12">
+          <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} layout="vertical">
                 <XAxis
@@ -638,21 +656,23 @@ const BenchmarkPage = () => {
                 <RechartsTooltip formatter={(v: number) => `${v.toFixed(1)}%`} />
                 <Bar dataKey="improvement" radius={[0, 4, 4, 0]}>
                   {chartData.map((_, i) => (
-                    <Cell key={i} fill="hsl(180 100% 33%)" />
+                    <Cell key={i} fill="hsl(var(--home-coral))" />
                   ))}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
+          </div>
         </FadeInSection>
 
         <FadeInSection>
-          <h3 className="text-lg font-bold mb-2">Ablation Trend</h3>
-          <p className="text-sm text-muted-foreground mb-4">
+          <div className="home-panel mb-12 rounded-[32px] p-6">
+          <h3 className="mb-2 text-xl font-semibold text-[hsl(var(--home-ink))]">Ablation Trend</h3>
+          <p className="mb-4 text-sm text-[hsl(var(--home-muted))]">
             Trend derived from real benchmark ablation rows, not synthetic mock
             calls.
           </p>
-          <div className="h-48 mb-12">
+          <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={learningLoopData}>
                 <XAxis
@@ -674,65 +694,66 @@ const BenchmarkPage = () => {
                 <Line
                   type="monotone"
                   dataKey="wer"
-                  stroke="hsl(180 100% 33%)"
+                  stroke="hsl(var(--home-coral))"
                   strokeWidth={2}
                   dot={{ r: 3 }}
                 />
               </LineChart>
             </ResponsiveContainer>
           </div>
+          </div>
         </FadeInSection>
 
         <FadeInSection>
-          <div className="mb-12">
+          <div className="home-panel-strong mb-12 rounded-[32px] p-6 sm:p-8">
             <div className="flex items-center justify-between gap-4 mb-3">
               <div>
-                <h2 className="text-2xl font-bold">XGBoost Learning Loop</h2>
-                <p className="text-sm text-muted-foreground mt-1">
+                <h2 className="font-display text-3xl tracking-[-0.04em] text-[hsl(var(--home-ink))]">XGBoost Learning Loop</h2>
+                <p className="mt-2 text-sm text-[hsl(var(--home-muted))]">
                   Scribe v2 feeds the transcript; the post-processor learns which words should be verified.
                 </p>
               </div>
               {learningLoop?.summary && (
                 <div className="grid grid-cols-3 gap-2 min-w-[280px]">
-                  <div className="rounded-md border p-3 text-center">
-                    <div className="text-lg font-semibold">
+                  <div className="rounded-[20px] border border-[hsl(var(--home-line))/0.8] bg-white/[0.72] p-3 text-center">
+                    <div className="text-lg font-semibold text-[hsl(var(--home-ink))]">
                       {learningLoop.summary.latest_clip_count ?? "n/a"}
                     </div>
-                    <div className="text-xs text-muted-foreground">Calls Learned</div>
+                    <div className="text-xs text-[hsl(var(--home-muted))]">Calls Learned</div>
                   </div>
-                  <div className="rounded-md border p-3 text-center">
-                    <div className="text-lg font-semibold">
+                  <div className="rounded-[20px] border border-[hsl(var(--home-line))/0.8] bg-white/[0.72] p-3 text-center">
+                    <div className="text-lg font-semibold text-[hsl(var(--home-ink))]">
                       {learningLoop.summary.latest_f1 !== null &&
                       learningLoop.summary.latest_f1 !== undefined
                         ? `${(learningLoop.summary.latest_f1 * 100).toFixed(1)}%`
                         : "n/a"}
                     </div>
-                    <div className="text-xs text-muted-foreground">Latest F1</div>
+                    <div className="text-xs text-[hsl(var(--home-muted))]">Latest F1</div>
                   </div>
-                  <div className="rounded-md border p-3 text-center">
-                    <div className="text-lg font-semibold">
+                  <div className="rounded-[20px] border border-[hsl(var(--home-line))/0.8] bg-white/[0.72] p-3 text-center">
+                    <div className="text-lg font-semibold text-[hsl(var(--home-ink))]">
                       {learningLoop.summary.latest_auc !== null &&
                       learningLoop.summary.latest_auc !== undefined
                         ? `${(learningLoop.summary.latest_auc * 100).toFixed(1)}%`
                         : "n/a"}
                     </div>
-                    <div className="text-xs text-muted-foreground">Latest AUC</div>
+                    <div className="text-xs text-[hsl(var(--home-muted))]">Latest AUC</div>
                   </div>
                 </div>
               )}
             </div>
 
             {learningLoopNote && (
-              <div className="rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-warning mb-4">
+              <div className="mb-4 rounded-[24px] border border-[rgba(210,141,73,0.35)] bg-[rgba(255,241,227,0.92)] px-4 py-3 text-sm text-[hsl(var(--home-ink))]">
                 {learningLoopNote}
               </div>
             )}
 
             {learningLoop && (
               <div className="grid gap-6 lg:grid-cols-2">
-                <div className="rounded-lg border shadow-card p-4">
-                  <h3 className="text-lg font-semibold mb-1">Boosting Rounds</h3>
-                  <p className="text-xs text-muted-foreground mb-4">
+                <div className="home-panel rounded-[28px] p-4">
+                  <h3 className="mb-1 text-lg font-semibold text-[hsl(var(--home-ink))]">Boosting Rounds</h3>
+                  <p className="mb-4 text-xs text-[hsl(var(--home-muted))]">
                     Training vs validation {learningLoop.metric_name ?? "metric"} over boosting rounds.
                   </p>
                   <div className="h-64">
@@ -741,16 +762,16 @@ const BenchmarkPage = () => {
                         <XAxis dataKey="round" />
                         <YAxis />
                         <RechartsTooltip />
-                        <Line type="monotone" dataKey="train" stroke="hsl(180 100% 33%)" strokeWidth={2} dot={false} />
-                        <Line type="monotone" dataKey="validation" stroke="hsl(15 90% 56%)" strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="train" stroke="hsl(var(--home-coral))" strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="validation" stroke="hsl(var(--home-ink))" strokeWidth={2} dot={false} />
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
                 </div>
 
-                <div className="rounded-lg border shadow-card p-4">
-                  <h3 className="text-lg font-semibold mb-1">Improvement Over More Calls</h3>
-                  <p className="text-xs text-muted-foreground mb-4">
+                <div className="home-panel rounded-[28px] p-4">
+                  <h3 className="mb-1 text-lg font-semibold text-[hsl(var(--home-ink))]">Improvement Over More Calls</h3>
+                  <p className="mb-4 text-xs text-[hsl(var(--home-muted))]">
                     Retraining snapshots as corrected Scribe v2 calls are added back into the loop.
                   </p>
                   <div className="h-64">
@@ -759,17 +780,17 @@ const BenchmarkPage = () => {
                         <XAxis dataKey="calls" />
                         <YAxis tickFormatter={(value) => `${Number(value).toFixed(0)}%`} />
                         <RechartsTooltip formatter={(value: number) => `${value.toFixed(1)}%`} />
-                        <Line type="monotone" dataKey="accuracy" stroke="hsl(220 80% 58%)" strokeWidth={2} dot={{ r: 2 }} />
-                        <Line type="monotone" dataKey="f1" stroke="hsl(180 100% 33%)" strokeWidth={2} dot={{ r: 2 }} />
-                        <Line type="monotone" dataKey="auc" stroke="hsl(142 70% 42%)" strokeWidth={2} dot={{ r: 2 }} connectNulls />
+                        <Line type="monotone" dataKey="accuracy" stroke="hsl(198 65% 56%)" strokeWidth={2} dot={{ r: 2 }} />
+                        <Line type="monotone" dataKey="f1" stroke="hsl(var(--home-coral))" strokeWidth={2} dot={{ r: 2 }} />
+                        <Line type="monotone" dataKey="auc" stroke="hsl(145 50% 38%)" strokeWidth={2} dot={{ r: 2 }} connectNulls />
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
                 </div>
 
-                <div className="rounded-lg border shadow-card p-4 lg:col-span-2">
-                  <h3 className="text-lg font-semibold mb-1">Top Risk Features</h3>
-                  <p className="text-xs text-muted-foreground mb-4">
+                <div className="home-panel rounded-[28px] p-4 lg:col-span-2">
+                  <h3 className="mb-1 text-lg font-semibold text-[hsl(var(--home-ink))]">Top Risk Features</h3>
+                  <p className="mb-4 text-xs text-[hsl(var(--home-muted))]">
                     What the post-processor is leaning on most when deciding which words should be verified.
                   </p>
                   <div className="h-80">
@@ -780,7 +801,7 @@ const BenchmarkPage = () => {
                         <RechartsTooltip formatter={(value: number) => value.toFixed(4)} />
                         <Bar dataKey="importance" radius={[0, 4, 4, 0]}>
                           {xgbFeatureImportance.map((_, index) => (
-                            <Cell key={index} fill="hsl(220 80% 58%)" />
+                            <Cell key={index} fill="hsl(198 65% 56%)" />
                           ))}
                         </Bar>
                       </BarChart>
@@ -793,9 +814,9 @@ const BenchmarkPage = () => {
         </FadeInSection>
 
         <FadeInSection>
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold mb-6">Methodology</h2>
-            <ol className="space-y-3 text-sm text-foreground">
+          <div className="home-panel mb-12 rounded-[32px] p-6 sm:p-8">
+            <h2 className="mb-6 font-display text-3xl tracking-[-0.04em] text-[hsl(var(--home-ink))]">Methodology</h2>
+            <ol className="space-y-3 text-sm text-[hsl(var(--home-ink))]">
               {[
                 "ElevenLabs TTS renders healthcare call scripts with diverse voices and accents.",
                 "ffmpeg degrades audio to simulated 8kHz telephony conditions.",
@@ -808,7 +829,7 @@ const BenchmarkPage = () => {
                 "Corrected WER is compared against raw WER per clip and stage.",
               ].map((step, i) => (
                 <li key={i} className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-accent text-accent-foreground text-xs flex items-center justify-center font-bold">
+                  <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-[hsl(var(--home-coral))] text-xs font-bold text-white">
                     {i + 1}
                   </span>
                   {step}
@@ -820,7 +841,7 @@ const BenchmarkPage = () => {
 
         <Button
           variant="outline"
-          className="rounded-pill gap-2"
+          className="gap-2 rounded-full border-[hsl(var(--home-line))] bg-white/80 text-[hsl(var(--home-ink))] hover:bg-white"
           onClick={() => {
             const blob = new Blob([JSON.stringify(data, null, 2)], {
               type: "application/json",
@@ -839,7 +860,7 @@ const BenchmarkPage = () => {
         )}
       </div>
 
-      <Footer />
+      <Footer variant="editorial" />
     </div>
   );
 };
