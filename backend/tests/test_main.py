@@ -43,8 +43,16 @@ def client(monkeypatch):
     monkeypatch.setattr(scribe, "transcribe_batch", fake_transcribe)
 
     # ---- Mock Person A: uncertainty returns parallel HIGH confidence words ----
-    def fake_score(words, keyterms, phonetic_map, correction_history, *, stt_provider_name=None):
-        del stt_provider_name
+    def fake_score(
+        words,
+        keyterms,
+        phonetic_map,
+        correction_history,
+        *,
+        stt_provider_name=None,
+        enable_xgboost=True,
+    ):
+        del stt_provider_name, enable_xgboost
         return [
             WordWithConfidence(
                 word=w.text,
@@ -116,6 +124,28 @@ def test_transcribe_end_to_end(client):
     assert "total" in body["pipeline_latency_ms"]
 
 
+def test_transcribe_disabling_verification_returns_identity_corrections(client):
+    resp = client.post(
+        "/transcribe",
+        data={"verification_enabled": "false"},
+        files={"file": ("test.wav", b"RIFF....fake-audio", "audio/wav")},
+    )
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert [word["word"] for word in body["corrected_transcript"]] == [
+        word["word"] for word in body["raw_transcript"]
+    ]
+    assert body["clinical_summary"] == {
+        "medications": [],
+        "symptoms": [],
+        "allergies": [],
+        "follow_up_actions": [],
+        "appointment_needed": False,
+    }
+    assert body["pipeline_latency_ms"]["tavily"] == 0
+    assert body["pipeline_latency_ms"]["claude"] == 0
+
+
 @pytest.mark.parametrize(
     "requested_model",
     [
@@ -123,14 +153,26 @@ def test_transcribe_end_to_end(client):
         "lora",
         "emergency_lora",
         "fine_tuned_telephony",
+        "raw_scribe_v2",
+        "base_whisper_small",
+        "base_whisper_tiny",
     ],
 )
 def test_transcribe_passes_requested_stt_model(monkeypatch, requested_model: str):
-    captured: dict[str, str | None] = {"stt_model": None}
+    captured: dict[str, str | bool | None] = {
+        "stt_model": None,
+        "verification_enabled": None,
+    }
 
-    async def fake_run_full_pipeline(audio_path: str, *, stt_provider_override: str | None = None):
+    async def fake_run_full_pipeline(
+        audio_path: str,
+        *,
+        stt_provider_override: str | None = None,
+        verification_enabled: bool = True,
+    ):
         del audio_path
         captured["stt_model"] = stt_provider_override
+        captured["verification_enabled"] = verification_enabled
         return TranscribeResponse(
             raw_transcript=[],
             corrected_transcript=[],
@@ -156,6 +198,50 @@ def test_transcribe_passes_requested_stt_model(monkeypatch, requested_model: str
 
     assert resp.status_code == 200, resp.text
     assert captured["stt_model"] == requested_model
+    assert captured["verification_enabled"] is True
+
+
+def test_transcribe_can_disable_verification_layers(monkeypatch):
+    captured: dict[str, str | bool | None] = {
+        "stt_model": None,
+        "verification_enabled": None,
+    }
+
+    async def fake_run_full_pipeline(
+        audio_path: str,
+        *,
+        stt_provider_override: str | None = None,
+        verification_enabled: bool = True,
+    ):
+        del audio_path
+        captured["stt_model"] = stt_provider_override
+        captured["verification_enabled"] = verification_enabled
+        return TranscribeResponse(
+            raw_transcript=[],
+            corrected_transcript=[],
+            clinical_summary=ClinicalSummary(),
+            pipeline_latency_ms=PipelineLatency(
+                preprocessing=0,
+                scribe=0,
+                uncertainty=0,
+                tavily=0,
+                claude=0,
+                total=0,
+            ),
+        )
+
+    monkeypatch.setattr(main.pipeline, "run_full_pipeline", fake_run_full_pipeline)
+
+    fresh = TestClient(main.app)
+    resp = fresh.post(
+        "/transcribe",
+        data={"stt_model": "base_whisper_small", "verification_enabled": "false"},
+        files={"file": ("test.wav", b"RIFF....fake-audio", "audio/wav")},
+    )
+
+    assert resp.status_code == 200, resp.text
+    assert captured["stt_model"] == "base_whisper_small"
+    assert captured["verification_enabled"] is False
 
 
 def test_transcribe_returns_501_when_person_a_stub(monkeypatch):

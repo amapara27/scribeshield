@@ -142,6 +142,19 @@ def test_normalize_provider_aliases() -> None:
     assert runtime._normalize_provider_name("fine_tuned_telephony") == "full_ft"
     assert runtime._normalize_provider_name("whisper_small_LoRA_normal") == "lora"
     assert runtime._normalize_provider_name("whisper_tiny_LoRA_emergency") == "emergency_lora"
+    assert runtime._normalize_provider_name("raw_scribe") == "raw_scribe_v2"
+    assert runtime._normalize_provider_name("whisper_small_base") == "base_whisper_small"
+    assert runtime._normalize_provider_name("whisper_tiny_base") == "base_whisper_tiny"
+
+
+def test_get_batch_provider_honors_base_whisper_small_override(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(runtime.settings, "STT_PROVIDER", "auto")
+    monkeypatch.setattr(runtime.settings, "BASE_WHISPER_SMALL_MODEL_ID", "openai/whisper-small")
+
+    provider = runtime.get_batch_provider("base_whisper_small")
+
+    assert provider.name == "base_whisper_small"
+    assert isinstance(provider, runtime.BaseWhisperBatchProvider)
 
 
 def test_pipeline_device_auto_prefers_mps(monkeypatch: pytest.MonkeyPatch) -> None:

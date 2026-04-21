@@ -228,6 +228,27 @@ def test_build_ablation_rows_uses_live_eval_stage_texts():
     assert keyterm_impact_pct > 0
 
 
+def test_build_ablation_rows_reflects_disabled_verification_mode():
+    mod = _load_run_benchmark_module()
+
+    rows, _ = mod._build_ablation_rows(
+        [
+            {
+                "ground_truth": "I take metformin 50 mg once daily",
+                "baseline_raw_text": "I take metfornin 15 mg once daily",
+                "preprocessed_raw_text": "I take metfornin 50 mg once daily",
+                "keyterm_raw_text": "I take metformin 50 mg once daily",
+                "corrected_text": "I take metformin 50 mg once daily",
+            }
+        ],
+        wer_scale=100.0,
+        verification_enabled=False,
+    )
+
+    assert rows[-1]["stage"] == "+ Verification Layer Disabled"
+    assert "skips XGBoost, Tavily, and Claude" in rows[-1]["description"]
+
+
 def test_error_hypothesis_indices_marks_substitutions_and_insertions():
     mod = _load_run_benchmark_module()
 

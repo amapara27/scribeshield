@@ -5,7 +5,10 @@ export type SttModelOption =
   | "fine_tuned_telephony"
   | "lora"
   | "emergency_lora"
-  | "scribe_v2";
+  | "scribe_v2"
+  | "raw_scribe_v2"
+  | "base_whisper_small"
+  | "base_whisper_tiny";
 
 export interface RawWord {
   word: string;

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, Pause, Play, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { transcribeAudio } from "@/services/api";
@@ -35,9 +36,12 @@ type RoutingDecision = {
 };
 
 type CachedEmergencyRun = {
-  result: TranscribeResponse;
+  tunedResult: TranscribeResponse;
+  baseResult: TranscribeResponse | null;
   selection: AudioSelection;
   file: File;
+  verificationEnabled: boolean;
+  errorMessage: string | null;
 };
 
 const EMERGENCY_SAMPLES: EmergencySample[] = [
@@ -137,6 +141,50 @@ const LATENCY_STAGES = [
   { key: "tavily", label: "Verify" },
   { key: "claude", label: "Summary" },
 ] as const;
+
+const verificationModeKey = (enabled: boolean) => (enabled ? "verify_on" : "verify_off");
+const verificationModeLabel = (enabled: boolean) => (enabled ? "Verification on" : "Verification off");
+const emergencyCacheKey = (selectionId: string, verificationEnabled: boolean) =>
+  `${selectionId}:${verificationModeKey(verificationEnabled)}`;
+
+const normalizeDiffToken = (token: string) => token.trim().toLowerCase();
+
+const lcsMatchedIndices = (left: string[], right: string[]) => {
+  const rows = left.length;
+  const cols = right.length;
+  const dp = Array.from({ length: rows + 1 }, () => Array<number>(cols + 1).fill(0));
+
+  for (let i = 1; i <= rows; i += 1) {
+    for (let j = 1; j <= cols; j += 1) {
+      if (normalizeDiffToken(left[i - 1]) === normalizeDiffToken(right[j - 1])) {
+        dp[i][j] = dp[i - 1][j - 1] + 1;
+      } else {
+        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+      }
+    }
+  }
+
+  const leftMatched = new Set<number>();
+  const rightMatched = new Set<number>();
+  let i = rows;
+  let j = cols;
+  while (i > 0 && j > 0) {
+    if (normalizeDiffToken(left[i - 1]) === normalizeDiffToken(right[j - 1])) {
+      leftMatched.add(i - 1);
+      rightMatched.add(j - 1);
+      i -= 1;
+      j -= 1;
+      continue;
+    }
+    if (dp[i - 1][j] >= dp[i][j - 1]) {
+      i -= 1;
+    } else {
+      j -= 1;
+    }
+  }
+
+  return { leftMatched, rightMatched };
+};
 
 const generateFallbackWaveform = (seedText: string, bars = 46) => {
   let seed = 0;
@@ -261,8 +309,11 @@ const EmergencyPage = () => {
   const [selectedSampleId, setSelectedSampleId] = useState<string>(EMERGENCY_SAMPLES[0].id);
   const [stage, setStage] = useState<ProcessingStage>("idle");
   const [result, setResult] = useState<TranscribeResponse | null>(null);
+  const [baseResult, setBaseResult] = useState<TranscribeResponse | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selection, setSelection] = useState<AudioSelection | null>(null);
+  const [verificationEnabled, setVerificationEnabled] = useState(true);
+  const [resultVerificationEnabled, setResultVerificationEnabled] = useState<boolean | null>(null);
   const [audioCurrentTime, setAudioCurrentTime] = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
@@ -289,6 +340,20 @@ const EmergencyPage = () => {
     [result, revealedWordCount],
   );
   const correctedText = correctedWords.map((word) => word.word).join(" ").trim();
+  const baseRawTokens = useMemo(
+    () => baseResult?.raw_transcript.map((word) => word.word) ?? [],
+    [baseResult],
+  );
+  const tunedCorrectedTokens = useMemo(
+    () => result?.corrected_transcript.map((word) => word.word) ?? [],
+    [result],
+  );
+  const transcriptDiff = useMemo(
+    () => lcsMatchedIndices(baseRawTokens, tunedCorrectedTokens),
+    [baseRawTokens, tunedCorrectedTokens],
+  );
+  const baseDifferenceCount = Math.max(0, baseRawTokens.length - transcriptDiff.leftMatched.size);
+  const tunedDifferenceCount = Math.max(0, tunedCorrectedTokens.length - transcriptDiff.rightMatched.size);
   const isTranscriptAnimating = !!result && revealedWordCount < result.corrected_transcript.length;
   const transcriptWordLabel = result
     ? isTranscriptAnimating
@@ -296,6 +361,7 @@ const EmergencyPage = () => {
       : `${result.corrected_transcript.length} words`
     : "0 words";
   const modelLatencyMs = result?.pipeline_latency_ms.scribe ?? 0;
+  const baseModelLatencyMs = baseResult?.pipeline_latency_ms.scribe ?? 0;
   const postProcessingLatencyMs = result
     ? Math.max(
         0,
@@ -304,7 +370,9 @@ const EmergencyPage = () => {
     : 0;
   const effectiveAudioDuration = audioDuration > 0 ? audioDuration : loadedSample?.durationSec ?? 0;
   const speedLabel = result ? realtimeSpeedLabel(result.pipeline_latency_ms.total, effectiveAudioDuration) : null;
-  const transcriptRevealKey = selection && result ? `${selection.id}:corrected` : null;
+  const activeVerificationEnabled = resultVerificationEnabled ?? verificationEnabled;
+  const transcriptRevealKey =
+    selection && result ? `${selection.id}:${verificationModeKey(activeVerificationEnabled)}:corrected` : null;
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -359,9 +427,12 @@ const EmergencyPage = () => {
   }, [result, transcriptRevealKey]);
 
   const runEmergencyTranscription = useCallback(async (file: File, nextSelection: AudioSelection) => {
+    const requestedVerificationEnabled = verificationEnabled;
     setStage("uploading");
     setErrorMessage(null);
     setResult(null);
+    setBaseResult(null);
+    setResultVerificationEnabled(null);
     setRevealedWordCount(0);
     setSelection(nextSelection);
     fileRef.current = file;
@@ -372,33 +443,68 @@ const EmergencyPage = () => {
       if (waveformLoadIdRef.current === loadId) setWaveformPeaks(peaks);
     });
 
-    try {
-      const payload = await transcribeAudio(file, "emergency_lora");
-      cachedEmergencyRunsRef.current[nextSelection.id] = {
-        result: payload,
+    const [tunedOutcome, baseOutcome] = await Promise.allSettled([
+      transcribeAudio(file, "emergency_lora", {
+        verificationEnabled: requestedVerificationEnabled,
+      }),
+      transcribeAudio(file, "base_whisper_tiny", {
+        verificationEnabled: false,
+      }),
+    ]);
+
+    const tunedPayload = tunedOutcome.status === "fulfilled" ? tunedOutcome.value : null;
+    const basePayload = baseOutcome.status === "fulfilled" ? baseOutcome.value : null;
+
+    const failures: string[] = [];
+    if (tunedOutcome.status === "rejected") {
+      failures.push(
+        `Whisper Tiny LoRA (Emergency): ${
+          tunedOutcome.reason instanceof Error ? tunedOutcome.reason.message : "Transcription failed"
+        }`,
+      );
+    }
+    if (baseOutcome.status === "rejected") {
+      failures.push(
+        `Base Whisper Tiny (RAW): ${
+          baseOutcome.reason instanceof Error ? baseOutcome.reason.message : "Transcription failed"
+        }`,
+      );
+    }
+
+    setResult(tunedPayload);
+    setBaseResult(basePayload);
+    setResultVerificationEnabled(tunedPayload ? requestedVerificationEnabled : null);
+    if (tunedPayload) {
+      cachedEmergencyRunsRef.current[emergencyCacheKey(nextSelection.id, requestedVerificationEnabled)] = {
+        tunedResult: tunedPayload,
+        baseResult: basePayload,
         selection: nextSelection,
         file,
+        verificationEnabled: requestedVerificationEnabled,
+        errorMessage: failures.length > 0 ? failures.join(" | ") : null,
       };
-      setResult(payload);
       setStage("done");
-    } catch (e) {
-      setResult(null);
-      setStage("error");
-      setErrorMessage(e instanceof Error ? e.message : "Emergency transcription failed");
+      setErrorMessage(failures.length > 0 ? failures.join(" | ") : null);
+      return;
     }
-  }, []);
+
+    setStage("error");
+    setErrorMessage(failures.join(" | ") || "Emergency transcription failed");
+  }, [verificationEnabled]);
 
   const runSelectedSample = useCallback(async () => {
     const sample = EMERGENCY_SAMPLES.find((item) => item.id === selectedSampleId);
     if (!sample) return;
 
-    const cached = cachedEmergencyRunsRef.current[sample.id];
+    const cached = cachedEmergencyRunsRef.current[emergencyCacheKey(sample.id, verificationEnabled)];
     if (cached) {
       fileRef.current = cached.file;
-      setErrorMessage(null);
+      setErrorMessage(cached.errorMessage);
       setStage("done");
       setSelection(cached.selection);
-      setResult(cached.result);
+      setResult(cached.tunedResult);
+      setBaseResult(cached.baseResult);
+      setResultVerificationEnabled(cached.verificationEnabled);
       setRevealedWordCount(0);
       setWaveformPeaks(cachedWaveformPeaksRef.current[sample.id] ?? generateFallbackWaveform(sample.id));
       return;
@@ -422,7 +528,7 @@ const EmergencyPage = () => {
       setStage("error");
       setErrorMessage(e instanceof Error ? e.message : "Failed to run emergency sample");
     }
-  }, [runEmergencyTranscription, selectedSampleId]);
+  }, [runEmergencyTranscription, selectedSampleId, verificationEnabled]);
 
   const rerunCurrentAudio = useCallback(async () => {
     const currentFile = fileRef.current;
@@ -509,7 +615,7 @@ const EmergencyPage = () => {
                 </p>
                 <h2 className="mt-2 text-lg font-semibold text-[hsl(var(--home-ink))]">Sample Library</h2>
                 <p className="mt-1 text-sm leading-relaxed text-[hsl(var(--home-muted))]">
-                  Pick emergency scenarios, then run with <span className="font-medium text-[hsl(var(--home-ink))]">Whisper Tiny LoRA (Emergency)</span>.
+                  Pick emergency scenarios, then run <span className="font-medium text-[hsl(var(--home-ink))]">Whisper Tiny LoRA (Emergency)</span> and <span className="font-medium text-[hsl(var(--home-ink))]">Base Whisper Tiny (RAW)</span> side by side.
                 </p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Button
@@ -541,6 +647,30 @@ const EmergencyPage = () => {
                 >
                   Re-Run Current Audio
                 </Button>
+                <div className="mt-4 rounded-[24px] border border-[hsl(var(--home-line))] bg-white/80 px-3 py-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="home-eyebrow text-[11px] font-semibold text-[hsl(var(--home-muted))]">
+                        Verification Layer
+                      </p>
+                      <p className="mt-2 text-xs leading-relaxed text-[hsl(var(--home-muted))]">
+                        Toggle XGBoost, Tavily, and Claude for the next emergency run.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={verificationEnabled}
+                      onCheckedChange={(checked) => setVerificationEnabled(checked)}
+                      disabled={isProcessing}
+                      aria-label="Toggle emergency verification layer"
+                    />
+                  </div>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <Badge className="border-0 bg-[rgba(214,231,244,0.95)] text-[hsl(var(--home-ink))]">
+                      {verificationModeLabel(verificationEnabled)}
+                    </Badge>
+                    <span className="text-[11px] text-[hsl(var(--home-muted))]">Applies to the next run.</span>
+                  </div>
+                </div>
                 <input
                   ref={uploadInputRef}
                   type="file"
@@ -635,7 +765,10 @@ const EmergencyPage = () => {
                       <p className="mt-1 text-sm text-white/70">{selection.description}</p>
                       <div className="mt-3 flex flex-wrap gap-2">
                         <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium text-white/[0.85]">
-                          Whisper Tiny LoRA demo
+                          Whisper Tiny LoRA + Base Tiny comparison
+                        </span>
+                        <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium text-white/[0.85]">
+                          {result ? verificationModeLabel(activeVerificationEnabled) : `Next run: ${verificationModeLabel(verificationEnabled)}`}
                         </span>
                         <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium text-white/[0.85]">
                           {formatClipLength(loadedSample?.durationSec ?? audioDuration)}
@@ -713,7 +846,11 @@ const EmergencyPage = () => {
             {isProcessing && (
               <div className="home-panel rounded-[24px] p-4 flex items-center gap-3">
                 <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin shrink-0" />
-                <p className="text-sm text-[hsl(var(--home-ink))]">Running emergency transcription and routing...</p>
+                <p className="text-sm text-[hsl(var(--home-ink))]">
+                  {verificationEnabled
+                    ? "Running emergency LoRA and base Tiny comparison with routing..."
+                    : "Running emergency LoRA and base Tiny comparison (verification off)..."}
+                </p>
               </div>
             )}
 
@@ -724,6 +861,9 @@ const EmergencyPage = () => {
                     <div className="flex items-center justify-between border-b border-[hsl(var(--home-line))/0.75] bg-white/60 px-4 py-3">
                       <h3 className="text-base font-semibold text-[hsl(var(--home-ink))]">Corrected Transcript</h3>
                       <div className="flex items-center gap-2">
+                        <Badge className="border-[hsl(var(--home-line))] bg-white/70 text-[hsl(var(--home-muted))]">
+                          {verificationModeLabel(activeVerificationEnabled)}
+                        </Badge>
                         {isTranscriptAnimating && (
                           <Badge className="border-[hsl(var(--home-line))] bg-white/70 text-[hsl(var(--home-muted))]">
                             Live reveal
@@ -736,6 +876,11 @@ const EmergencyPage = () => {
                     </div>
                     <div className="p-4 max-h-[520px] overflow-auto">
                       <div className="space-y-3">
+                        {!activeVerificationEnabled && (
+                          <div className="rounded-[18px] border border-[hsl(var(--home-line))/0.8] bg-white/70 px-3 py-2 text-xs text-[hsl(var(--home-muted))]">
+                            Verification was disabled for this run, so the corrected transcript is a raw pass-through with no Tavily or Claude edits.
+                          </div>
+                        )}
                         {isTranscriptAnimating && (
                           <p className="home-eyebrow text-[11px] font-medium text-[hsl(var(--home-muted))]">
                             Revealing transcript word by word
@@ -747,6 +892,69 @@ const EmergencyPage = () => {
                             <span className="ml-1 inline-block h-4 w-0.5 animate-pulse bg-accent align-[-2px]" />
                           )}
                         </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="home-panel overflow-hidden rounded-[28px]">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[hsl(var(--home-line))/0.75] bg-white/60 px-4 py-3">
+                      <h3 className="text-base font-semibold text-[hsl(var(--home-ink))]">LoRA vs Base Tiny</h3>
+                      {baseResult && (
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge className="border-[hsl(var(--home-line))] bg-white/70 text-[hsl(var(--home-muted))]">
+                            {baseDifferenceCount} base-only tokens
+                          </Badge>
+                          <Badge className="border-0 bg-[rgba(207,232,223,0.95)] text-[hsl(var(--home-ink))]">
+                            {tunedDifferenceCount} tuned changes
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-1 gap-4 p-4 lg:grid-cols-2">
+                      <div className="rounded-[20px] border border-[hsl(var(--home-line))/0.8] bg-white/[0.72] p-3">
+                        <p className="text-sm font-semibold text-[hsl(var(--home-ink))]">Base Whisper Tiny (RAW)</p>
+                        <div className="mt-2 max-h-[220px] overflow-auto leading-relaxed">
+                          {baseResult ? (
+                            baseResult.raw_transcript.map((word, index) => {
+                              const changed = !transcriptDiff.leftMatched.has(index);
+                              return (
+                                <span
+                                  key={`base-${word.word}-${index}`}
+                                  className={`text-sm ${
+                                    changed
+                                      ? "rounded bg-[rgba(211,98,78,0.15)] px-0.5 font-medium text-[hsl(var(--home-ink))]"
+                                      : "text-[hsl(var(--home-ink))]"
+                                  }`}
+                                >
+                                  {word.word}{" "}
+                                </span>
+                              );
+                            })
+                          ) : (
+                            <p className="text-sm text-[hsl(var(--home-muted))]">Base transcript still loading.</p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="rounded-[20px] border border-[hsl(var(--home-line))/0.8] bg-white/[0.72] p-3">
+                        <p className="text-sm font-semibold text-[hsl(var(--home-ink))]">Whisper Tiny LoRA (Emergency)</p>
+                        <div className="mt-2 max-h-[220px] overflow-auto leading-relaxed">
+                          {result.corrected_transcript.map((word, index) => {
+                            const changed = !transcriptDiff.rightMatched.has(index);
+                            return (
+                              <span
+                                key={`tuned-${word.word}-${index}`}
+                                className={`text-sm ${
+                                  changed
+                                    ? "rounded bg-[rgba(31,148,133,0.16)] px-0.5 font-medium text-[hsl(var(--home-ink))]"
+                                    : "text-[hsl(var(--home-ink))]"
+                                }`}
+                              >
+                                {word.word}{" "}
+                              </span>
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -773,7 +981,11 @@ const EmergencyPage = () => {
                       <h3 className="text-base font-semibold text-[hsl(var(--home-ink))]">Clinical Summary</h3>
                     </div>
                     <div className="p-4 space-y-4 text-sm">
-                      {summaryHasContent(result.clinical_summary) ? (
+                      {!activeVerificationEnabled ? (
+                        <p className="text-[hsl(var(--home-muted))]">
+                          Clinical summary generation is disabled for this run because the verification layer was turned off.
+                        </p>
+                      ) : summaryHasContent(result.clinical_summary) ? (
                         <>
                           {result.clinical_summary.symptoms.length > 0 && (
                             <div>
@@ -817,6 +1029,12 @@ const EmergencyPage = () => {
                         <div className="rounded-[20px] border border-[hsl(var(--home-line))/0.8] bg-white/70 px-3 py-3">
                           <p className="home-eyebrow text-[11px] font-medium text-[hsl(var(--home-muted))]">Tiny LoRA STT</p>
                           <p className="mt-2 text-lg font-semibold text-[hsl(var(--home-ink))]">{formatLatency(modelLatencyMs)}</p>
+                        </div>
+                        <div className="rounded-[20px] border border-[hsl(var(--home-line))/0.8] bg-white/70 px-3 py-3">
+                          <p className="home-eyebrow text-[11px] font-medium text-[hsl(var(--home-muted))]">Base Tiny STT</p>
+                          <p className="mt-2 text-lg font-semibold text-[hsl(var(--home-ink))]">
+                            {baseResult ? formatLatency(baseModelLatencyMs) : "Waiting"}
+                          </p>
                         </div>
                         <div className="rounded-[20px] border border-[hsl(var(--home-line))/0.8] bg-white/70 px-3 py-3">
                           <p className="home-eyebrow text-[11px] font-medium text-[hsl(var(--home-muted))]">Post-STT Routing</p>

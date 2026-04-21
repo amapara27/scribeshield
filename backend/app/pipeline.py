@@ -16,6 +16,7 @@ from time import perf_counter
 from . import claude_correct, claude_extract, learning_loop, preprocessing, scribe, uncertainty
 from .medical_patterns import matches_medical
 from .schemas import (
+    ClinicalSummary,
     CorrectedWord,
     PipelineLatency,
     RawWord,
@@ -70,14 +71,55 @@ def _to_raw_words(
     return out
 
 
+def _identity_corrected_words(
+    scored: list[WordWithConfidence],
+    speakers: list[str],
+) -> list[CorrectedWord]:
+    return [
+        CorrectedWord(
+            word=w.word,
+            changed=False,
+            tavily_verified=False,
+            unverified=False,
+            speaker=speakers[i],  # type: ignore[arg-type]
+        )
+        for i, w in enumerate(scored)
+    ]
+
+
 async def _run_post_scribe(
     scribe_words: list[ScribeWord],
     base_latencies: dict[str, int],
     *,
     stt_provider_name: str | None = None,
+    verification_enabled: bool = True,
 ) -> TranscribeResponse:
     latencies = dict(base_latencies)
     speakers = resolve_speakers(scribe_words)
+
+    if not verification_enabled:
+        scored = [
+            WordWithConfidence(
+                word=w.text,
+                start_ms=w.start_ms,
+                end_ms=w.end_ms,
+                speaker_id=w.speaker_id,
+                confidence="HIGH",
+                uncertainty_signals=[],
+            )
+            for w in scribe_words
+        ]
+        latencies["uncertainty"] = 0
+        latencies["tavily"] = 0
+        latencies["claude"] = 0
+        latencies["total"] = sum(latencies.values())
+        return TranscribeResponse(
+            raw_transcript=_to_raw_words(scored, speakers),
+            corrected_transcript=_identity_corrected_words(scored, speakers),
+            clinical_summary=ClinicalSummary(),
+            pipeline_latency_ms=PipelineLatency(**latencies),
+        )
+
     keyterms = learning_loop.get_keyterms(top_n=100)
 
     # ---------------- Layer 3: uncertainty scoring (Person A) ------------------
@@ -88,6 +130,7 @@ async def _run_post_scribe(
         phonetic_map=learning_loop.get_phonetic_map(),
         correction_history=learning_loop.get_correction_history(),
         stt_provider_name=stt_provider_name,
+        enable_xgboost=verification_enabled,
     )
     latencies["uncertainty"] = _ms_since(t)
 
@@ -138,6 +181,7 @@ async def run_full_pipeline(
     audio_path: str,
     *,
     stt_provider_override: str | None = None,
+    verification_enabled: bool = True,
 ) -> TranscribeResponse:
     latencies: dict[str, int] = {}
 
@@ -160,6 +204,7 @@ async def run_full_pipeline(
         scribe_result.words,
         latencies,
         stt_provider_name=stt_provider_name,
+        verification_enabled=verification_enabled,
     )
 
 
@@ -167,10 +212,17 @@ async def run_pipeline_from_scribe_words(
     words: list[ScribeWord],
     *,
     scribe_latency_ms: int = 0,
+    stt_provider_name: str | None = "scribe_v2",
+    verification_enabled: bool = True,
 ) -> TranscribeResponse:
     """Run layers 3-7 from already-transcribed Scribe words (realtime path)."""
     base_latencies = {
         "preprocessing": 0,
         "scribe": max(0, int(scribe_latency_ms)),
     }
-    return await _run_post_scribe(words, base_latencies)
+    return await _run_post_scribe(
+        words,
+        base_latencies,
+        stt_provider_name=stt_provider_name,
+        verification_enabled=verification_enabled,
+    )

@@ -44,7 +44,14 @@ class _FakeRealtimeClient:
         return None
 
 
-async def _fake_pipeline(words, *, scribe_latency_ms=0):
+async def _fake_pipeline(
+    words,
+    *,
+    scribe_latency_ms=0,
+    stt_provider_name="scribe_v2",
+    verification_enabled=True,
+):
+    del words, scribe_latency_ms, stt_provider_name, verification_enabled
     return TranscribeResponse(
         raw_transcript=[],
         corrected_transcript=[],
@@ -95,3 +102,42 @@ def test_stream_token_is_single_use():
     token = realtime.issue_stream_token(ttl_sec=60)["token"]
     assert realtime.consume_stream_token(token) is True
     assert realtime.consume_stream_token(token) is False
+
+
+def test_stream_ws_passes_verification_flag(monkeypatch):
+    captured: dict[str, bool | None] = {"verification_enabled": None}
+
+    async def fake_pipeline(
+        words,
+        *,
+        scribe_latency_ms=0,
+        stt_provider_name="scribe_v2",
+        verification_enabled=True,
+    ):
+        del words, scribe_latency_ms, stt_provider_name
+        captured["verification_enabled"] = verification_enabled
+        return TranscribeResponse(
+            raw_transcript=[],
+            corrected_transcript=[],
+            clinical_summary=ClinicalSummary(),
+            pipeline_latency_ms=PipelineLatency(
+                preprocessing=0, scribe=0, uncertainty=1, tavily=0, claude=0, total=1
+            ),
+        )
+
+    monkeypatch.setattr(main.settings, "ELEVENLABS_API_KEY", SecretStr("x"))
+    monkeypatch.setattr(realtime, "ScribeRealtimeClient", _FakeRealtimeClient)
+    monkeypatch.setattr(pipeline, "run_pipeline_from_scribe_words", fake_pipeline)
+
+    client = TestClient(main.app)
+    token = client.get("/stream/token").json()["token"]
+
+    with client.websocket_connect(f"/stream?token={token}&verification_enabled=false") as ws:
+        ws.send_bytes(b"\x00\x01\x02\x03")
+        ws.receive_json()
+        ws.receive_json()
+        correction = ws.receive_json()
+
+    assert correction["type"] == "correction"
+    assert correction["payload"]["pipeline_latency_ms"]["tavily"] == 0
+    assert captured["verification_enabled"] is False

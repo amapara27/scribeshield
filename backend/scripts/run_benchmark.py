@@ -108,6 +108,12 @@ def _parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--verification-layer",
+        choices=("on", "off"),
+        default="on",
+        help="Toggle the XGBoost/Tavily/Claude verification layer when --run-pipeline is used.",
+    )
+    parser.add_argument(
         "--base-whisper-model",
         default=DEFAULT_BASE_WHISPER_MODEL_ID,
         help="Transformers model id/path for the unfine-tuned Whisper baseline",
@@ -919,6 +925,7 @@ def _build_ablation_rows(
     eval_rows: Sequence[dict[str, Any]],
     *,
     wer_scale: float,
+    verification_enabled: bool = True,
 ) -> tuple[list[dict[str, Any]], float]:
     if not eval_rows:
         return [], 0.0
@@ -942,8 +949,16 @@ def _build_ablation_rows(
         ),
         (
             "corrected_text",
-            "+ Tavily Verification + Safe Correction",
-            "Applies the full uncertainty, verification, and Claude correction pipeline with the hallucination guard.",
+            (
+                "+ Tavily Verification + Safe Correction"
+                if verification_enabled
+                else "+ Verification Layer Disabled"
+            ),
+            (
+                "Applies the full uncertainty, verification, and Claude correction pipeline with the hallucination guard."
+                if verification_enabled
+                else "Keeps preprocessing, dynamic keyterms, and rule-based uncertainty, but skips XGBoost, Tavily, and Claude so corrected text is a raw pass-through."
+            ),
         ),
     ]
 
@@ -1141,6 +1156,7 @@ async def _generate_eval_rows_via_pipeline(
     wer_scale: float,
     rate_scale: float,
     base_whisper_model_id: str,
+    verification_enabled: bool,
 ) -> tuple[list[dict[str, Any]], dict[str, float], list[dict[str, Any]], float]:
     _ensure_backend_imports()
 
@@ -1182,7 +1198,10 @@ async def _generate_eval_rows_via_pipeline(
         preprocessed_result = await scribe.transcribe_batch(cleaned_path, [])
         keyterms = learning_loop.get_keyterms(top_n=100)
         keyterm_result = await scribe.transcribe_batch(cleaned_path, keyterms)
-        final_result = await pipeline.run_pipeline_from_scribe_words(keyterm_result.words)
+        final_result = await pipeline.run_pipeline_from_scribe_words(
+            keyterm_result.words,
+            verification_enabled=verification_enabled,
+        )
 
         baseline_raw_text = _join_text([word.text for word in baseline_result.words])
         preprocessed_raw_text = _join_text([word.text for word in preprocessed_result.words])
@@ -1270,7 +1289,11 @@ async def _generate_eval_rows_via_pipeline(
             rate_scale,
         ),
     }
-    ablation, keyterm_impact_pct = _build_ablation_rows(eval_rows, wer_scale=wer_scale)
+    ablation, keyterm_impact_pct = _build_ablation_rows(
+        eval_rows,
+        wer_scale=wer_scale,
+        verification_enabled=verification_enabled,
+    )
     return eval_rows, metrics, ablation, keyterm_impact_pct
 
 
@@ -1282,6 +1305,7 @@ def main() -> int:
     wer_scale, rate_scale = _scale_from_source(payload)
 
     if args.run_pipeline:
+        verification_enabled = args.verification_layer == "on"
         eval_rows, metrics, ablation, keyterm_impact_pct = asyncio.run(
             _generate_eval_rows_via_pipeline(
                 manifest_rows_by_clip,
@@ -1289,6 +1313,7 @@ def main() -> int:
                 wer_scale=wer_scale,
                 rate_scale=rate_scale,
                 base_whisper_model_id=args.base_whisper_model,
+                verification_enabled=verification_enabled,
             )
         )
         args.eval.parent.mkdir(parents=True, exist_ok=True)

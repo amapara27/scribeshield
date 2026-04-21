@@ -9,6 +9,10 @@ import type {
 
 const API_URL = import.meta.env.VITE_API_URL || "";
 
+type VerificationRequestOptions = {
+  verificationEnabled?: boolean;
+};
+
 async function readErrorMessage(res: Response): Promise<string> {
   try {
     const data: unknown = await res.json();
@@ -29,10 +33,17 @@ async function readErrorMessage(res: Response): Promise<string> {
 /**
  * POST /transcribe — upload audio file, get full pipeline result
  */
-export async function transcribeAudio(file: File, sttModel?: SttModelOption): Promise<TranscribeResponse> {
+export async function transcribeAudio(
+  file: File,
+  sttModel?: SttModelOption,
+  options?: VerificationRequestOptions,
+): Promise<TranscribeResponse> {
   const formData = new FormData();
   formData.append("file", file);
   if (sttModel) formData.append("stt_model", sttModel);
+  if (options?.verificationEnabled !== undefined) {
+    formData.append("verification_enabled", String(options.verificationEnabled));
+  }
 
   const res = await fetch(`${API_URL}/transcribe`, {
     method: "POST",
@@ -79,7 +90,11 @@ export async function checkHealth(): Promise<HealthResponse> {
 /**
  * Create WebSocket connection for live streaming
  */
-export function createStreamSocket(token: string): WebSocket {
+export function createStreamSocket(token: string, options?: VerificationRequestOptions): WebSocket {
   const wsUrl = API_URL.replace(/^http/, "ws");
-  return new WebSocket(`${wsUrl}/stream?token=${token}`);
+  const params = new URLSearchParams({ token });
+  if (options?.verificationEnabled !== undefined) {
+    params.set("verification_enabled", String(options.verificationEnabled));
+  }
+  return new WebSocket(`${wsUrl}/stream?${params.toString()}`);
 }

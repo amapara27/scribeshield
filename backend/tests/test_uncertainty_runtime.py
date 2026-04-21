@@ -79,6 +79,30 @@ def test_uncertainty_skips_xgboost_for_emergency_provider(monkeypatch):
     assert all(not sig.startswith("xgboost_risk:") for sig in scored[0].uncertainty_signals)
 
 
+def test_uncertainty_skips_xgboost_when_verification_disabled(monkeypatch):
+    monkeypatch.setattr(uncertainty.settings, "XGBOOST_RUNTIME_ENABLED", True)
+    called = {"xgb": False}
+
+    def _score(words, keyterms, correction_history):
+        called["xgb"] = True
+        return [0.81 for _ in words]
+
+    monkeypatch.setattr(uncertainty._xgb_scorer, "score_words", _score)
+
+    words = [_w("metformin", 0, 90)]
+    scored = uncertainty.score_words(
+        words=words,
+        keyterms=["metformin"],
+        phonetic_map={},
+        correction_history={},
+        stt_provider_name="scribe_v2",
+        enable_xgboost=False,
+    )
+
+    assert called["xgb"] is False
+    assert all(not sig.startswith("xgboost_risk:") for sig in scored[0].uncertainty_signals)
+
+
 @pytest.mark.parametrize("provider_name", ["full_ft", "lora", "emergency_lora"])
 def test_whisper_medical_words_get_review_highlight(monkeypatch, provider_name: str):
     monkeypatch.setattr(uncertainty.settings, "XGBOOST_RUNTIME_ENABLED", False)

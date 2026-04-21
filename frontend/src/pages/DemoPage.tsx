@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { Stethoscope, Pill, Syringe, AlertTriangle, Activity, CheckCircle, HelpCircle, Download, Play, Pause, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -214,11 +215,17 @@ type WorkspaceAudioSelection = {
 };
 
 type ClinicModelOption = "fine_tuned_telephony" | "lora" | "scribe_v2";
+type ClinicBaseModelOption = "raw_scribe_v2" | "base_whisper_small";
 
 const STT_MODEL_LABELS: Record<ClinicModelOption, string> = {
   fine_tuned_telephony: "Whisper Fine-Tuned",
   lora: "Whisper LoRA",
   scribe_v2: "ScribeV2",
+};
+
+const BASE_MODEL_LABELS: Record<ClinicBaseModelOption, string> = {
+  raw_scribe_v2: "RAW ScribeV2",
+  base_whisper_small: "RAW Whisper Small",
 };
 
 const CORE_MODEL_COMPARE_ORDER: ClinicModelOption[] = [
@@ -227,14 +234,22 @@ const CORE_MODEL_COMPARE_ORDER: ClinicModelOption[] = [
   "scribe_v2",
 ];
 
+const BASE_MODEL_COMPARE_ORDER: ClinicBaseModelOption[] = [
+  "raw_scribe_v2",
+  "base_whisper_small",
+];
+
 type ModelRunState = {
   status: "idle" | "pending" | "running" | "done" | "error";
   result?: TranscribeResponse;
   error?: string;
+  verificationEnabled?: boolean;
 };
 
 type CachedComparisonState = {
   comparisonRuns: Record<ClinicModelOption, ModelRunState>;
+  baseModelRuns: Record<ClinicBaseModelOption, ModelRunState>;
+  selectedBaseModel: ClinicBaseModelOption;
   activeComparisonTab: ClinicModelOption;
   errorMessage: string | null;
   stage: ProcessingStage;
@@ -256,10 +271,25 @@ const cloneModelRuns = (runs: Record<ClinicModelOption, ModelRunState>): Record<
   scribe_v2: { ...runs.scribe_v2 },
 });
 
+const createEmptyBaseRuns = (): Record<ClinicBaseModelOption, ModelRunState> => ({
+  raw_scribe_v2: { status: "idle" },
+  base_whisper_small: { status: "idle" },
+});
+
+const cloneBaseRuns = (runs: Record<ClinicBaseModelOption, ModelRunState>): Record<ClinicBaseModelOption, ModelRunState> => ({
+  raw_scribe_v2: { ...runs.raw_scribe_v2 },
+  base_whisper_small: { ...runs.base_whisper_small },
+});
+
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const isTransientLoadError = (message: string) =>
   /load failed|failed to fetch|networkerror|network request failed/i.test(message);
+
+const verificationModeKey = (enabled: boolean) => (enabled ? "verify_on" : "verify_off");
+const verificationModeLabel = (enabled: boolean) => (enabled ? "Verification on" : "Verification off");
+const scenarioCacheKey = (scenarioId: string, verificationEnabled: boolean) =>
+  `${scenarioId}:${verificationModeKey(verificationEnabled)}`;
 
 const transcriptRevealDelayMs = (word: string) => {
   if (/[.!?]$/.test(word)) return 150;
@@ -316,14 +346,57 @@ const useTranscriptReveal = <T extends { word: string }>(
   };
 };
 
+const normalizeDiffToken = (token: string) => token.trim().toLowerCase();
+
+const lcsMatchedIndices = (left: string[], right: string[]) => {
+  const rows = left.length;
+  const cols = right.length;
+  const dp = Array.from({ length: rows + 1 }, () => Array<number>(cols + 1).fill(0));
+
+  for (let i = 1; i <= rows; i += 1) {
+    for (let j = 1; j <= cols; j += 1) {
+      if (normalizeDiffToken(left[i - 1]) === normalizeDiffToken(right[j - 1])) {
+        dp[i][j] = dp[i - 1][j - 1] + 1;
+      } else {
+        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+      }
+    }
+  }
+
+  const leftMatched = new Set<number>();
+  const rightMatched = new Set<number>();
+  let i = rows;
+  let j = cols;
+
+  while (i > 0 && j > 0) {
+    if (normalizeDiffToken(left[i - 1]) === normalizeDiffToken(right[j - 1])) {
+      leftMatched.add(i - 1);
+      rightMatched.add(j - 1);
+      i -= 1;
+      j -= 1;
+      continue;
+    }
+    if (dp[i - 1][j] >= dp[i][j - 1]) {
+      i -= 1;
+    } else {
+      j -= 1;
+    }
+  }
+
+  return { leftMatched, rightMatched };
+};
+
 const DemoPage = () => {
   const [stage, setStage] = useState<ProcessingStage>("idle");
   const [comparisonRuns, setComparisonRuns] = useState<Record<ClinicModelOption, ModelRunState>>(() => createEmptyModelRuns());
+  const [baseModelRuns, setBaseModelRuns] = useState<Record<ClinicBaseModelOption, ModelRunState>>(() => createEmptyBaseRuns());
   const [activeComparisonTab, setActiveComparisonTab] = useState<ClinicModelOption>("fine_tuned_telephony");
+  const [selectedBaseModel, setSelectedBaseModel] = useState<ClinicBaseModelOption>("raw_scribe_v2");
   const [selectedSituationId, setSelectedSituationId] = useState<string>(SITUATIONS[0].id);
   const [activeScenario, setActiveScenario] = useState<string | null>(null);
   const [uploadedSelection, setUploadedSelection] = useState<WorkspaceAudioSelection | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [verificationEnabled, setVerificationEnabled] = useState(true);
   const [audioCurrentTime, setAudioCurrentTime] = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
@@ -337,6 +410,7 @@ const DemoPage = () => {
   const resetWorkspaceState = useCallback(() => {
     setErrorMessage(null);
     setComparisonRuns(createEmptyModelRuns());
+    setBaseModelRuns(createEmptyBaseRuns());
     setActiveComparisonTab("fine_tuned_telephony");
     setStage("uploading");
     setAudioCurrentTime(0);
@@ -345,26 +419,33 @@ const DemoPage = () => {
   }, []);
 
   const runComparison = useCallback(async (file: File): Promise<ComparisonRunSummary> => {
+    const requestedVerificationEnabled = verificationEnabled;
+    const requestedBaseModel = selectedBaseModel;
     const nextRuns: Record<ClinicModelOption, ModelRunState> = {
-      fine_tuned_telephony: { status: "pending" },
-      lora: { status: "pending" },
-      scribe_v2: { status: "pending" },
+      fine_tuned_telephony: { status: "pending", verificationEnabled: requestedVerificationEnabled },
+      lora: { status: "pending", verificationEnabled: requestedVerificationEnabled },
+      scribe_v2: { status: "pending", verificationEnabled: requestedVerificationEnabled },
+    };
+    const nextBaseRuns: Record<ClinicBaseModelOption, ModelRunState> = {
+      raw_scribe_v2: { status: "pending", verificationEnabled: false },
+      base_whisper_small: { status: "pending", verificationEnabled: false },
     };
     setComparisonRuns(cloneModelRuns(nextRuns));
+    setBaseModelRuns(cloneBaseRuns(nextBaseRuns));
 
     const runSingleModel = async (model: ClinicModelOption) => {
-      nextRuns[model] = { status: "running" };
+      nextRuns[model] = { status: "running", verificationEnabled: requestedVerificationEnabled };
       setComparisonRuns((prev) => ({
         ...prev,
-        [model]: { status: "running" },
+        [model]: { status: "running", verificationEnabled: requestedVerificationEnabled },
       }));
 
       try {
-        const data = await transcribeAudio(file, model);
-        nextRuns[model] = { status: "done", result: data };
+        const data = await transcribeAudio(file, model, { verificationEnabled: requestedVerificationEnabled });
+        nextRuns[model] = { status: "done", result: data, verificationEnabled: requestedVerificationEnabled };
         setComparisonRuns((prev) => ({
           ...prev,
-          [model]: { status: "done", result: data },
+          [model]: { status: "done", result: data, verificationEnabled: requestedVerificationEnabled },
         }));
         return { model, success: true as const };
       } catch (e) {
@@ -373,11 +454,11 @@ const DemoPage = () => {
         if (isTransientLoadError(message)) {
           await sleep(500);
           try {
-            const data = await transcribeAudio(file, model);
-            nextRuns[model] = { status: "done", result: data };
+            const data = await transcribeAudio(file, model, { verificationEnabled: requestedVerificationEnabled });
+            nextRuns[model] = { status: "done", result: data, verificationEnabled: requestedVerificationEnabled };
             setComparisonRuns((prev) => ({
               ...prev,
-              [model]: { status: "done", result: data },
+              [model]: { status: "done", result: data, verificationEnabled: requestedVerificationEnabled },
             }));
             return { model, success: true as const };
           } catch (retryError) {
@@ -385,10 +466,51 @@ const DemoPage = () => {
           }
         }
 
-        nextRuns[model] = { status: "error", error: message };
+        nextRuns[model] = { status: "error", error: message, verificationEnabled: requestedVerificationEnabled };
         setComparisonRuns((prev) => ({
           ...prev,
-          [model]: { status: "error", error: message },
+          [model]: { status: "error", error: message, verificationEnabled: requestedVerificationEnabled },
+        }));
+        return { model, success: false as const, message };
+      }
+    };
+
+    const runSingleBaseModel = async (model: ClinicBaseModelOption) => {
+      nextBaseRuns[model] = { status: "running", verificationEnabled: false };
+      setBaseModelRuns((prev) => ({
+        ...prev,
+        [model]: { status: "running", verificationEnabled: false },
+      }));
+
+      try {
+        const data = await transcribeAudio(file, model, { verificationEnabled: false });
+        nextBaseRuns[model] = { status: "done", result: data, verificationEnabled: false };
+        setBaseModelRuns((prev) => ({
+          ...prev,
+          [model]: { status: "done", result: data, verificationEnabled: false },
+        }));
+        return { model, success: true as const };
+      } catch (e) {
+        let message = e instanceof Error ? e.message : "Transcription failed";
+        if (isTransientLoadError(message)) {
+          await sleep(500);
+          try {
+            const data = await transcribeAudio(file, model, { verificationEnabled: false });
+            nextBaseRuns[model] = { status: "done", result: data, verificationEnabled: false };
+            setBaseModelRuns((prev) => ({
+              ...prev,
+              [model]: { status: "done", result: data, verificationEnabled: false },
+            }));
+            return { model, success: true as const };
+          } catch (retryError) {
+            message = retryError instanceof Error ? retryError.message : message;
+          }
+        }
+
+        nextBaseRuns[model] = { status: "error", error: message, verificationEnabled: false };
+        setBaseModelRuns((prev) => ({
+          ...prev,
+          [model]: { status: "error", error: message, verificationEnabled: false },
         }));
         return { model, success: false as const, message };
       }
@@ -398,23 +520,39 @@ const DemoPage = () => {
       | { model: ClinicModelOption; success: true }
       | { model: ClinicModelOption; success: false; message: string }
     > = [];
+    const baseOutcomes: Array<
+      | { model: ClinicBaseModelOption; success: true }
+      | { model: ClinicBaseModelOption; success: false; message: string }
+    > = [];
     // Start all Clinic models together so Fine-Tuned Whisper and LoRA
     // can warm up side-by-side again now that the backend crash path is removed.
-    outcomes.push(
-      ...(await Promise.all([
+    const [coreModelOutcomes, baselineModelOutcomes] = await Promise.all([
+      Promise.all([
         runSingleModel("fine_tuned_telephony"),
         runSingleModel("lora"),
         runSingleModel("scribe_v2"),
-      ])),
-    );
+      ]),
+      Promise.all([
+        runSingleBaseModel("raw_scribe_v2"),
+        runSingleBaseModel("base_whisper_small"),
+      ]),
+    ]);
+    outcomes.push(...coreModelOutcomes);
+    baseOutcomes.push(...baselineModelOutcomes);
 
     const firstSuccessfulModel = CORE_MODEL_COMPARE_ORDER.find((model) =>
       outcomes.some((outcome) => outcome.model === model && outcome.success),
     );
     const failures = outcomes
       .filter((outcome) => !outcome.success)
-      .map((outcome) => `${STT_MODEL_LABELS[outcome.model]}: ${outcome.message}`);
+      .map((outcome) => `${STT_MODEL_LABELS[outcome.model]}: ${outcome.message}`)
+      .concat(
+        baseOutcomes
+          .filter((outcome) => !outcome.success)
+          .map((outcome) => `${BASE_MODEL_LABELS[outcome.model]}: ${outcome.message}`),
+      );
     const finalRuns = cloneModelRuns(nextRuns);
+    const finalBaseRuns = cloneBaseRuns(nextBaseRuns);
 
     if (firstSuccessfulModel) {
       const nextErrorMessage = failures.length > 0 ? failures.join(" | ") : null;
@@ -423,6 +561,8 @@ const DemoPage = () => {
       setErrorMessage(nextErrorMessage);
       return {
         comparisonRuns: finalRuns,
+        baseModelRuns: finalBaseRuns,
+        selectedBaseModel: requestedBaseModel,
         activeComparisonTab: firstSuccessfulModel,
         errorMessage: nextErrorMessage,
         stage: "done",
@@ -435,12 +575,14 @@ const DemoPage = () => {
     setErrorMessage(nextErrorMessage);
     return {
       comparisonRuns: finalRuns,
+      baseModelRuns: finalBaseRuns,
+      selectedBaseModel: requestedBaseModel,
       activeComparisonTab: "fine_tuned_telephony",
       errorMessage: nextErrorMessage,
       stage: "error",
       hadSuccess: false,
     };
-  }, []);
+  }, [selectedBaseModel, verificationEnabled]);
 
   const runUploadedFile = useCallback(async (
     file: File,
@@ -468,12 +610,14 @@ const DemoPage = () => {
     situation: DemoSituation,
     variant: DemoVariant,
   ) => {
-    const cached = cachedScenarioRunsRef.current[variant.id];
+    const cached = cachedScenarioRunsRef.current[scenarioCacheKey(variant.id, verificationEnabled)];
     if (cached) {
       setUploadedSelection(null);
       setSelectedSituationId(situation.id);
       setActiveScenario(variant.id);
       setComparisonRuns(cloneModelRuns(cached.comparisonRuns));
+      setBaseModelRuns(cloneBaseRuns(cached.baseModelRuns));
+      setSelectedBaseModel(cached.selectedBaseModel);
       setActiveComparisonTab(cached.activeComparisonTab);
       setStage(cached.stage);
       setErrorMessage(cached.errorMessage);
@@ -501,8 +645,10 @@ const DemoPage = () => {
       const file = new File([blob], `${variant.id}.wav`, { type: blob.type || "audio/wav" });
       const summary = await runComparison(file);
       if (summary.hadSuccess) {
-        cachedScenarioRunsRef.current[variant.id] = {
+        cachedScenarioRunsRef.current[scenarioCacheKey(variant.id, verificationEnabled)] = {
           comparisonRuns: cloneModelRuns(summary.comparisonRuns),
+          baseModelRuns: cloneBaseRuns(summary.baseModelRuns),
+          selectedBaseModel: summary.selectedBaseModel,
           activeComparisonTab: summary.activeComparisonTab,
           errorMessage: summary.errorMessage,
           stage: summary.stage,
@@ -512,13 +658,23 @@ const DemoPage = () => {
       setStage("error");
       setErrorMessage(e instanceof Error ? e.message : "Transcription failed");
     }
-  }, [resetWorkspaceState, runComparison]);
+  }, [resetWorkspaceState, runComparison, verificationEnabled]);
 
   const isProcessing = stage === "uploading";
   const anyComparisonResult = CORE_MODEL_COMPARE_ORDER.some((model) => comparisonRuns[model].status !== "idle");
   const activeRun = comparisonRuns[activeComparisonTab];
+  const activeBaseRun = baseModelRuns[selectedBaseModel];
   const activeResult = activeRun.result;
+  const activeBaseResult = activeBaseRun.result;
+  const activeResultVerificationEnabled =
+    activeRun.verificationEnabled
+    ?? CORE_MODEL_COMPARE_ORDER.map((model) => comparisonRuns[model].verificationEnabled).find((value) => value !== undefined)
+    ?? verificationEnabled;
   const activeRunLoading = activeRun.status === "running" || (activeRun.status === "idle" && isProcessing);
+  const activeBaseRunLoading =
+    activeBaseRun.status === "running"
+    || activeBaseRun.status === "pending"
+    || (activeBaseRun.status === "idle" && isProcessing);
   const selectedSituation =
     SITUATIONS.find((situation) => situation.id === selectedSituationId) ?? SITUATIONS[0];
   const activeScenarioDetails =
@@ -558,10 +714,11 @@ const DemoPage = () => {
 
   useEffect(() => {
     if (!activeScenario) return;
-    const cached = cachedScenarioRunsRef.current[activeScenario];
+    const cached = cachedScenarioRunsRef.current[scenarioCacheKey(activeScenario, activeResultVerificationEnabled)];
     if (!cached) return;
     cached.activeComparisonTab = activeComparisonTab;
-  }, [activeComparisonTab, activeScenario]);
+    cached.selectedBaseModel = selectedBaseModel;
+  }, [activeComparisonTab, activeResultVerificationEnabled, activeScenario, selectedBaseModel]);
 
   const togglePlayback = useCallback(async () => {
     const audio = audioRef.current;
@@ -682,7 +839,57 @@ const DemoPage = () => {
                   <p className="mt-2 text-xs leading-relaxed text-[hsl(var(--home-muted))]">
                     Each run executes <span className="font-medium text-[hsl(var(--home-ink))]">Whisper Fine-Tuned</span>,{" "}
                     <span className="font-medium text-[hsl(var(--home-ink))]">Whisper LoRA</span>,{" "}
-                    and <span className="font-medium text-[hsl(var(--home-ink))]">ScribeV2</span> for clinic scenarios.
+                    <span className="font-medium text-[hsl(var(--home-ink))]">ScribeV2</span>, plus both raw baselines{" "}
+                    <span className="font-medium text-[hsl(var(--home-ink))]">RAW ScribeV2</span> and{" "}
+                    <span className="font-medium text-[hsl(var(--home-ink))]">RAW Whisper Small</span>.
+                  </p>
+                </div>
+                <div className="mt-4 rounded-[24px] border border-[hsl(var(--home-line))] bg-white/80 px-3 py-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="home-eyebrow text-[11px] font-semibold text-[hsl(var(--home-muted))]">
+                        Verification Layer
+                      </p>
+                      <p className="mt-2 text-xs leading-relaxed text-[hsl(var(--home-muted))]">
+                        Toggle XGBoost, Tavily, and Claude for the next clinic run without changing the layout.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={verificationEnabled}
+                      onCheckedChange={(checked) => setVerificationEnabled(checked)}
+                      disabled={isProcessing}
+                      aria-label="Toggle clinic verification layer"
+                    />
+                  </div>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <Badge className="border-0 bg-[rgba(214,231,244,0.95)] text-[hsl(var(--home-ink))]">
+                      {verificationModeLabel(verificationEnabled)}
+                    </Badge>
+                    <span className="text-[11px] text-[hsl(var(--home-muted))]">Applies to the next run.</span>
+                  </div>
+                </div>
+                <div className="mt-4 rounded-[24px] border border-[hsl(var(--home-line))] bg-white/80 px-3 py-3">
+                  <label
+                    htmlFor="base-model-select"
+                    className="home-eyebrow text-[11px] font-semibold text-[hsl(var(--home-muted))]"
+                  >
+                    Compare with base model (non fine-tuned)
+                  </label>
+                  <select
+                    id="base-model-select"
+                    value={selectedBaseModel}
+                    onChange={(event) => setSelectedBaseModel(event.target.value as ClinicBaseModelOption)}
+                    disabled={isProcessing}
+                    className="editorial-input mt-2 w-full rounded-[16px] px-3 py-2 text-sm outline-none transition focus:border-[hsl(var(--home-coral))] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {BASE_MODEL_COMPARE_ORDER.map((model) => (
+                      <option key={model} value={model}>
+                        {BASE_MODEL_LABELS[model]}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-2 text-xs text-[hsl(var(--home-muted))]">
+                    Runs raw-only baseline output with XGBoost, Tavily, and Claude disabled.
                   </p>
                 </div>
                 <input
@@ -801,7 +1008,10 @@ const DemoPage = () => {
                       {activeSelection.category}
                     </Badge>
                     <Badge className="rounded-full border-[hsl(var(--home-line))] bg-white/70 text-[hsl(var(--home-muted))]">
-                      {CORE_MODEL_COMPARE_ORDER.length}-model comparison
+                      {CORE_MODEL_COMPARE_ORDER.length + BASE_MODEL_COMPARE_ORDER.length}-model comparison
+                    </Badge>
+                    <Badge className="rounded-full border-[hsl(var(--home-line))] bg-white/70 text-[hsl(var(--home-muted))]">
+                      {activeResult ? verificationModeLabel(activeResultVerificationEnabled) : `Next run: ${verificationModeLabel(verificationEnabled)}`}
                     </Badge>
                     <Badge className="rounded-full border-[hsl(var(--home-line))] bg-white/70 text-[hsl(var(--home-muted))]">
                       {stage === "done" ? "Loaded" : isProcessing ? "Running" : "Ready"}
@@ -923,6 +1133,30 @@ const DemoPage = () => {
                     );
                   })}
                 </div>
+                <div className="mt-3 rounded-[20px] border border-[hsl(var(--home-line))] bg-white/70 px-3 py-2">
+                  <p className="home-eyebrow text-[11px] font-semibold text-[hsl(var(--home-muted))]">
+                    Base Comparison
+                  </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
+                    <Badge className="border-0 bg-[rgba(214,231,244,0.95)] text-[hsl(var(--home-ink))]">
+                      {BASE_MODEL_LABELS[selectedBaseModel]}
+                    </Badge>
+                    <Badge className="border-[hsl(var(--home-line))] bg-white/70 text-[hsl(var(--home-muted))]">
+                      {activeBaseRun.status === "done"
+                        ? "Loaded"
+                        : activeBaseRun.status === "running" || activeBaseRun.status === "pending"
+                          ? "Running"
+                          : activeBaseRun.status === "error"
+                            ? "Error"
+                            : "Pending"}
+                    </Badge>
+                    {activeBaseResult && (
+                      <Badge className="border-[hsl(var(--home-line))] bg-white/70 text-[hsl(var(--home-muted))]">
+                        {formatLatencyCompact(activeBaseResult.pipeline_latency_ms.total)}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 
@@ -930,7 +1164,9 @@ const DemoPage = () => {
               <div className="home-panel rounded-[24px] p-4 flex items-center gap-3">
                 <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin shrink-0" />
                 <p className="text-sm text-[hsl(var(--home-ink))]">
-                  Running all models on the server...
+                  {verificationEnabled
+                    ? "Running all models with the full verification stack..."
+                    : "Running all models with verification disabled..."}
                 </p>
               </div>
             )}
@@ -941,27 +1177,46 @@ const DemoPage = () => {
               </div>
             )}
 
+            {activeBaseRun.status === "error" && activeBaseRun.error && (
+              <div className="rounded-[24px] border border-[rgba(211,98,78,0.35)] bg-[rgba(255,237,230,0.92)] px-4 py-3 text-sm text-[hsl(var(--home-ink))]">
+                {BASE_MODEL_LABELS[selectedBaseModel]} failed: {activeBaseRun.error}
+              </div>
+            )}
+
             {(isProcessing || anyComparisonResult) && (
               <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(340px,0.95fr)] gap-6 items-start">
                 <TranscriptPanel
                   title="Raw Transcript"
                   loading={activeRunLoading}
                   words={activeResult?.raw_transcript}
-                  cacheKey={activeSelection ? `${activeSelection.id}:${activeComparisonTab}:raw` : undefined}
+                  cacheKey={activeSelection ? `${activeSelection.id}:${activeComparisonTab}:${verificationModeKey(activeResultVerificationEnabled)}:raw` : undefined}
                 />
                 <CorrectedPanel
                   title="Corrected Transcript"
                   loading={activeRunLoading}
                   words={activeResult?.corrected_transcript}
                   latency={activeResult?.pipeline_latency_ms}
-                  cacheKey={activeSelection ? `${activeSelection.id}:${activeComparisonTab}:corrected` : undefined}
+                  verificationEnabled={activeResultVerificationEnabled}
+                  cacheKey={activeSelection ? `${activeSelection.id}:${activeComparisonTab}:${verificationModeKey(activeResultVerificationEnabled)}:corrected` : undefined}
                 />
                 <SummaryPanel
                   className="xl:sticky xl:top-24"
                   loading={activeRunLoading}
                   summary={activeResult?.clinical_summary}
+                  verificationEnabled={activeResultVerificationEnabled}
                 />
               </div>
+            )}
+
+            {(isProcessing || anyComparisonResult) && (
+              <ComparisonDiffPanel
+                loading={activeRunLoading || activeBaseRunLoading}
+                baseLabel={BASE_MODEL_LABELS[selectedBaseModel]}
+                baseWords={activeBaseResult?.raw_transcript}
+                tunedLabel={STT_MODEL_LABELS[activeComparisonTab]}
+                tunedWords={activeResult?.corrected_transcript}
+                verificationEnabled={activeResultVerificationEnabled}
+              />
             )}
 
             {stage === "idle" && (
@@ -1076,9 +1331,10 @@ const TranscriptPanel = ({ title, loading, words, cacheKey }: {
   );
 };
 
-const CorrectedPanel = ({ title, loading, words, latency, cacheKey }: {
+const CorrectedPanel = ({ title, loading, words, latency, verificationEnabled, cacheKey }: {
   title: string; loading: boolean; words?: CorrectedWord[];
   latency?: TranscribeResponse["pipeline_latency_ms"];
+  verificationEnabled: boolean;
   cacheKey?: string;
 }) => {
   const { visibleWords, isAnimating, revealedWordCount } = useTranscriptReveal(words, loading, cacheKey);
@@ -1100,6 +1356,9 @@ const CorrectedPanel = ({ title, loading, words, latency, cacheKey }: {
         </div>
         {words && (
           <div className="flex shrink-0 items-center gap-2">
+            <Badge className="border-[hsl(var(--home-line))] bg-white/70 text-[hsl(var(--home-muted))]">
+              {verificationModeLabel(verificationEnabled)}
+            </Badge>
             {isAnimating && (
               <Badge className="border-[hsl(var(--home-line))] bg-white/70 text-[hsl(var(--home-muted))]">
                 Live reveal
@@ -1124,9 +1383,16 @@ const CorrectedPanel = ({ title, loading, words, latency, cacheKey }: {
           </div>
         ) : words ? (
           <div className="space-y-3">
+            {!verificationEnabled && (
+              <div className="rounded-[18px] border border-[hsl(var(--home-line))/0.8] bg-white/70 px-3 py-2 text-xs text-[hsl(var(--home-muted))]">
+                Verification was disabled for this run, so the corrected transcript is a safe identity pass-through of the raw output.
+              </div>
+            )}
             {changedCount === 0 && (
               <div className="rounded-[18px] border border-[hsl(var(--home-line))/0.8] bg-white/70 px-3 py-2 text-xs text-[hsl(var(--home-muted))]">
-                {tavilyVerifiedCount > 0
+                {!verificationEnabled
+                  ? "XGBoost, Tavily, and Claude were disabled for this run, so no verification-driven edits were attempted."
+                  : tavilyVerifiedCount > 0
                   ? "Tavily verified terms, but no word-level correction was needed for this clip."
                   : tavilyRan
                     ? "Tavily ran, but no safe word-level correction was needed for this clip."
@@ -1192,17 +1458,130 @@ const CorrectedPanel = ({ title, loading, words, latency, cacheKey }: {
   );
 };
 
-const SummaryPanel = ({ loading, summary, className = "" }: {
+const ComparisonDiffPanel = ({
+  loading,
+  baseLabel,
+  baseWords,
+  tunedLabel,
+  tunedWords,
+  verificationEnabled,
+}: {
+  loading: boolean;
+  baseLabel: string;
+  baseWords?: RawWord[];
+  tunedLabel: string;
+  tunedWords?: CorrectedWord[];
+  verificationEnabled: boolean;
+}) => {
+  const baseTokens = baseWords?.map((word) => word.word) ?? [];
+  const tunedTokens = tunedWords?.map((word) => word.word) ?? [];
+  const matches = lcsMatchedIndices(baseTokens, tunedTokens);
+  const baseChangedCount = Math.max(0, baseTokens.length - matches.leftMatched.size);
+  const tunedChangedCount = Math.max(0, tunedTokens.length - matches.rightMatched.size);
+
+  return (
+    <div className="home-panel overflow-hidden rounded-[28px]">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[hsl(var(--home-line))/0.75] bg-white/60 px-4 py-3">
+        <div>
+          <h3 className="text-base font-semibold text-[hsl(var(--home-ink))]">Base vs Tuned Comparison</h3>
+          <p className="text-xs text-[hsl(var(--home-muted))]">
+            Highlights show where the tuned output diverges from the selected base transcript.
+          </p>
+        </div>
+        {!loading && baseWords && tunedWords && (
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge className="border-[hsl(var(--home-line))] bg-white/70 text-[hsl(var(--home-muted))]">
+              {baseChangedCount} base-only tokens
+            </Badge>
+            <Badge className="border-0 bg-[rgba(207,232,223,0.95)] text-[hsl(var(--home-ink))]">
+              {tunedChangedCount} tuned changes
+            </Badge>
+            {!verificationEnabled && (
+              <Badge className="border-[hsl(var(--home-line))] bg-white/70 text-[hsl(var(--home-muted))]">
+                Verification off
+              </Badge>
+            )}
+          </div>
+        )}
+      </div>
+      <div className="grid grid-cols-1 gap-4 p-4 xl:grid-cols-2">
+        <div className="rounded-[22px] border border-[hsl(var(--home-line))/0.8] bg-white/[0.72] p-4">
+          <p className="text-sm font-semibold text-[hsl(var(--home-ink))]">{baseLabel}</p>
+          <p className="mt-1 text-xs text-[hsl(var(--home-muted))]">Raw baseline output</p>
+          <div className="mt-3 max-h-[280px] overflow-auto leading-relaxed">
+            {loading ? (
+              <div className="space-y-2">{[...Array(5)].map((_, i) => <div key={i} className="skeleton h-4 w-full" />)}</div>
+            ) : baseWords ? (
+              baseWords.map((word, index) => {
+                const isChanged = !matches.leftMatched.has(index);
+                return (
+                  <span
+                    key={`${word.word}-${index}`}
+                    className={`text-sm ${
+                      isChanged
+                        ? "rounded bg-[rgba(211,98,78,0.15)] px-0.5 font-medium text-[hsl(var(--home-ink))]"
+                        : "text-[hsl(var(--home-ink))]"
+                    }`}
+                  >
+                    {word.word}{" "}
+                  </span>
+                );
+              })
+            ) : (
+              <p className="text-sm text-[hsl(var(--home-muted))]">Base transcript is still loading.</p>
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-[22px] border border-[hsl(var(--home-line))/0.8] bg-white/[0.72] p-4">
+          <p className="text-sm font-semibold text-[hsl(var(--home-ink))]">{tunedLabel}</p>
+          <p className="mt-1 text-xs text-[hsl(var(--home-muted))]">Tuned corrected output</p>
+          <div className="mt-3 max-h-[280px] overflow-auto leading-relaxed">
+            {loading ? (
+              <div className="space-y-2">{[...Array(5)].map((_, i) => <div key={i} className="skeleton h-4 w-full" />)}</div>
+            ) : tunedWords ? (
+              tunedWords.map((word, index) => {
+                const isChanged = !matches.rightMatched.has(index);
+                return (
+                  <span
+                    key={`${word.word}-${index}`}
+                    className={`text-sm ${
+                      isChanged
+                        ? "rounded bg-[rgba(31,148,133,0.16)] px-0.5 font-medium text-[hsl(var(--home-ink))]"
+                        : "text-[hsl(var(--home-ink))]"
+                    }`}
+                  >
+                    {word.word}{" "}
+                  </span>
+                );
+              })
+            ) : (
+              <p className="text-sm text-[hsl(var(--home-muted))]">Tuned transcript is still loading.</p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const SummaryPanel = ({ loading, summary, verificationEnabled, className = "" }: {
   loading: boolean;
   summary?: TranscribeResponse["clinical_summary"];
+  verificationEnabled: boolean;
   className?: string;
 }) => (
   <div className={`home-panel overflow-hidden rounded-[28px] min-h-[440px] ${className}`}>
     <div className="flex items-center justify-between border-b border-[hsl(var(--home-line))/0.75] bg-white/60 px-4 py-3">
       <h3 className="text-base font-semibold text-[hsl(var(--home-ink))]">Clinical Summary</h3>
-      {summary && (
+      {summary && verificationEnabled && (
         <Badge className="rounded-full border-0 bg-[rgba(207,232,223,0.95)] text-[hsl(var(--home-ink))]">
           EHR-Ready
+        </Badge>
+      )}
+      {!verificationEnabled && (
+        <Badge className="rounded-full border-[hsl(var(--home-line))] bg-white/70 text-[hsl(var(--home-muted))]">
+          Verification off
         </Badge>
       )}
     </div>
@@ -1210,6 +1589,10 @@ const SummaryPanel = ({ loading, summary, className = "" }: {
       {loading ? (
         <div className="space-y-3">
           {[...Array(5)].map((_, i) => <div key={i} className="skeleton h-4 w-full" />)}
+        </div>
+      ) : !verificationEnabled ? (
+        <div className="rounded-[20px] border border-[hsl(var(--home-line))/0.8] bg-white/[0.72] p-4 text-sm text-[hsl(var(--home-muted))]">
+          Clinical summary generation is disabled for this run because the verification layer was turned off.
         </div>
       ) : summary ? (
         <div className="space-y-4">

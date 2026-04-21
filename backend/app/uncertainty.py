@@ -99,6 +99,7 @@ def score_words(
     correction_history: dict[str, int],
     *,
     stt_provider_name: str | None = None,
+    enable_xgboost: bool = True,
 ) -> list[WordWithConfidence]:
     """Compute composite confidence per word from four signals.
 
@@ -123,7 +124,7 @@ def score_words(
     keyterms_norm = {normalize(k) for k in keyterms if k}
     durations = [max(0, w.end_ms - w.start_ms) for w in words]
 
-    if _xgboost_enabled_for_provider(stt_provider_name):
+    if enable_xgboost and _xgboost_enabled_for_provider(stt_provider_name):
         xgb_risks = _xgb_scorer.score_words(words, keyterms, correction_history)
     else:
         xgb_risks = [None for _ in words]

@@ -39,6 +39,17 @@ log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
+def _parse_bool_query(value: str | None, *, default: bool = True) -> bool:
+    if value is None:
+        return default
+    normalized = value.strip().lower()
+    if normalized in {"1", "true", "yes", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "off"}:
+        return False
+    return default
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     ensure_runtime_ready()
@@ -82,6 +93,10 @@ async def stream_token() -> StreamToken:
 async def stream(websocket: WebSocket) -> None:
     await websocket.accept()
     token = websocket.query_params.get("token", "")
+    verification_enabled = _parse_bool_query(
+        websocket.query_params.get("verification_enabled"),
+        default=True,
+    )
     if not realtime.consume_stream_token(token):
         await websocket.send_json(
             {"type": "error", "stage": "auth", "message": "Invalid or expired stream token"}
@@ -157,7 +172,10 @@ async def stream(websocket: WebSocket) -> None:
                 if not scribe_words:
                     continue
                 try:
-                    corrected = await pipeline.run_pipeline_from_scribe_words(scribe_words)
+                    corrected = await pipeline.run_pipeline_from_scribe_words(
+                        scribe_words,
+                        verification_enabled=verification_enabled,
+                    )
                     await websocket.send_json(
                         {
                             "type": "correction",
@@ -210,6 +228,7 @@ async def transcribe(
     stt_model: Literal[
         "auto",
         "scribe_v2",
+        "raw_scribe_v2",
         "full_ft",
         "fine_tuned_telephony",
         "lora",
@@ -217,8 +236,11 @@ async def transcribe(
         "emergency_lora",
         "emergency",
         "whisper_tiny_lora_emergency",
+        "base_whisper_small",
+        "base_whisper_tiny",
     ]
     | None = Form(None),
+    verification_enabled: bool = Form(True),
 ) -> TranscribeResponse:
     suffix = Path(file.filename or "upload.wav").suffix or ".wav"
     tmp_path: str | None = None
@@ -230,6 +252,7 @@ async def transcribe(
         return await pipeline.run_full_pipeline(
             tmp_path,
             stt_provider_override=stt_model,
+            verification_enabled=verification_enabled,
         )
 
     except NotImplementedError as exc:

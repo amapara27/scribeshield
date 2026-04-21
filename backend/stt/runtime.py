@@ -22,11 +22,14 @@ _LOCAL_PIPELINE_CACHE: dict[str, Any] = {
     "path": None,
     "pipeline": None,
 }
+_BASE_PIPELINE_CACHE: dict[str, Any] = {}
 
 LOCAL_WHISPER_PROVIDERS = {"full_ft", "lora", "emergency_lora"}
+BASE_WHISPER_PROVIDERS = {"base_whisper_small", "base_whisper_tiny"}
 SUPPORTED_PROVIDER_TOKENS = {
     "auto",
     "scribe_v2",
+    "raw_scribe_v2",
     "full_ft",
     "fine_tuned_telephony",
     "lora",
@@ -34,6 +37,8 @@ SUPPORTED_PROVIDER_TOKENS = {
     "emergency",
     "emergency_lora",
     "whisper_tiny_lora_emergency",
+    "base_whisper_small",
+    "base_whisper_tiny",
 }
 
 
@@ -65,7 +70,22 @@ def _normalize_provider_name(raw: str) -> str:
         return "lora"
     if value in {"emergency", "whisper_tiny_lora_emergency"}:
         return "emergency_lora"
-    if value in {"auto", "scribe_v2", "full_ft", "lora", "emergency_lora"}:
+    if value in {"scribe_v2_raw", "raw_scribe"}:
+        return "raw_scribe_v2"
+    if value in {"whisper_small_base", "base_whisper"}:
+        return "base_whisper_small"
+    if value == "whisper_tiny_base":
+        return "base_whisper_tiny"
+    if value in {
+        "auto",
+        "scribe_v2",
+        "raw_scribe_v2",
+        "full_ft",
+        "lora",
+        "emergency_lora",
+        "base_whisper_small",
+        "base_whisper_tiny",
+    }:
         return value
     raise RuntimeError(
         "Unsupported STT_PROVIDER="
@@ -207,9 +227,12 @@ def _provider_label(provider_name: str) -> str:
     provider = _normalize_provider_name(provider_name)
     labels = {
         "scribe_v2": "scribe_v2",
+        "raw_scribe_v2": "raw_scribe_v2",
         "full_ft": "full_ft",
         "lora": "lora",
         "emergency_lora": "emergency_lora",
+        "base_whisper_small": "base_whisper_small",
+        "base_whisper_tiny": "base_whisper_tiny",
     }
     return labels.get(provider, provider)
 
@@ -393,6 +416,23 @@ def _hf_pretrained_kwargs() -> dict[str, Any]:
     return {"token": token}
 
 
+def _base_model_id_for_provider(provider_name: str) -> str:
+    provider = _normalize_provider_name(provider_name)
+    if provider == "base_whisper_small":
+        return settings.BASE_WHISPER_SMALL_MODEL_ID.strip() or "openai/whisper-small"
+    if provider == "base_whisper_tiny":
+        return settings.BASE_WHISPER_TINY_MODEL_ID.strip() or "openai/whisper-tiny"
+    raise RuntimeError(f"Unsupported base provider: {provider_name!r}")
+
+
+def _default_generate_kwargs() -> dict[str, Any]:
+    # HF Whisper checkpoints use ISO language tags.
+    return {
+        "language": "en",
+        "task": "transcribe",
+    }
+
+
 def _load_local_pipeline(model_path: Path) -> Any:
     with _CACHE_LOCK:
         if _LOCAL_PIPELINE_CACHE["path"] == str(model_path) and _LOCAL_PIPELINE_CACHE["pipeline"] is not None:
@@ -481,8 +521,44 @@ def _load_local_pipeline(model_path: Path) -> Any:
         return pipe
 
 
+def _load_base_whisper_pipeline(model_ref: str) -> Any:
+    cache_key = model_ref.strip()
+    if not cache_key:
+        raise RuntimeError("Base Whisper model reference is empty")
+
+    with _CACHE_LOCK:
+        cached = _BASE_PIPELINE_CACHE.get(cache_key)
+        if cached is not None:
+            return cached
+
+        try:
+            import torch  # type: ignore[import-not-found]
+            from transformers import pipeline  # type: ignore[import-not-found]
+        except Exception as exc:  # noqa: BLE001
+            raise RuntimeError(
+                "Base Whisper runtime dependencies are missing. Install torch, transformers, sentencepiece, safetensors, and librosa."
+            ) from exc
+
+        pipeline_kwargs: dict[str, Any] = {
+            "task": "automatic-speech-recognition",
+            "model": cache_key,
+            "device": _pipeline_device(torch),
+            "model_kwargs": {
+                "torch_dtype": _torch_dtype(torch),
+                "low_cpu_mem_usage": True,
+            },
+        }
+        pipeline_kwargs.update(_hf_pretrained_kwargs())
+        pipe = pipeline(**pipeline_kwargs)
+        _BASE_PIPELINE_CACHE[cache_key] = pipe
+        return pipe
+
+
 class ScribeV2BatchProvider:
     name = "scribe_v2"
+
+    def __init__(self, *, provider_name: str = "scribe_v2"):
+        self.name = _normalize_provider_name(provider_name)
 
     async def transcribe_batch(self, wav_path: str, keyterms: list[str]) -> ScribeResult:
         from app import scribe
@@ -530,10 +606,35 @@ class FineTunedTelephonyBatchProvider:
         return ScribeResult(words=words, duration_ms=duration_ms)
 
 
+class BaseWhisperBatchProvider:
+    name = "base_whisper_small"
+
+    def __init__(self, *, provider_name: str):
+        self.name = _normalize_provider_name(provider_name)
+        self._model_ref = _base_model_id_for_provider(self.name)
+
+    async def transcribe_batch(self, wav_path: str, keyterms: list[str]) -> ScribeResult:
+        del keyterms
+        pipe = _load_base_whisper_pipeline(self._model_ref)
+        duration_ms = _wave_duration_ms(Path(wav_path))
+        payload = await asyncio.to_thread(
+            pipe,
+            wav_path,
+            return_timestamps="word",
+            generate_kwargs=_default_generate_kwargs(),
+        )
+        if not isinstance(payload, dict):
+            raise RuntimeError("Unexpected Base Whisper pipeline output shape")
+        words = pipeline_words_to_scribe_words(payload, duration_ms=duration_ms)
+        return ScribeResult(words=words, duration_ms=duration_ms)
+
+
 def get_batch_provider(provider_override: str | None = None) -> BatchSttProvider:
     provider = _normalize_provider_name(provider_override or settings.STT_PROVIDER)
-    if provider == "scribe_v2":
-        return ScribeV2BatchProvider()
+    if provider in {"scribe_v2", "raw_scribe_v2"}:
+        return ScribeV2BatchProvider(provider_name=provider)
+    if provider in BASE_WHISPER_PROVIDERS:
+        return BaseWhisperBatchProvider(provider_name=provider)
     if provider in LOCAL_WHISPER_PROVIDERS:
         resolved = resolve_named_model_location(provider).validation
         if not resolved.ready:
@@ -549,7 +650,7 @@ def get_batch_provider(provider_override: str | None = None) -> BatchSttProvider
             model_path=validation.path,
             provider_name=_provider_name_for_validation(validation),
         )
-    return ScribeV2BatchProvider()
+    return ScribeV2BatchProvider(provider_name="scribe_v2")
 
 
 def ensure_runtime_ready() -> None:
@@ -567,6 +668,13 @@ def batch_provider_status() -> str:
     loaded_path = _LOCAL_PIPELINE_CACHE["path"]
     if provider == "scribe_v2":
         return "scribe_v2 (forced)"
+    if provider == "raw_scribe_v2":
+        return "raw_scribe_v2 (forced)"
+    if provider in BASE_WHISPER_PROVIDERS:
+        model_ref = _base_model_id_for_provider(provider)
+        if model_ref in _BASE_PIPELINE_CACHE:
+            return f"{provider} (forced; loaded {model_ref})"
+        return f"{provider} (forced; using {model_ref})"
     if provider in LOCAL_WHISPER_PROVIDERS:
         resolved = resolve_named_model_location(provider)
         validation = resolved.validation
@@ -591,3 +699,4 @@ def reset_runtime_cache() -> None:
     with _CACHE_LOCK:
         _LOCAL_PIPELINE_CACHE["path"] = None
         _LOCAL_PIPELINE_CACHE["pipeline"] = None
+        _BASE_PIPELINE_CACHE.clear()
